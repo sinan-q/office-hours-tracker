@@ -218,7 +218,7 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
   let maxSkippable = 0;
   const minAttendancePercentage = settings.minAttendancePercentage;
   if (showDays.length + noShowDays.length + emptyDays.length === 0) {
-    return { canSkip: 'N/A', needShowDays: null };
+    return { canSkip: 'N/A', needShowDays: null, emptyDaysLeft: 0 };
   }
   let lastPercent = 0;
   for (let skips = 0; skips <= emptyDays.length; skips++) {
@@ -328,7 +328,7 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
     // Calculate how many more SHOW days needed
     const requiredNumerator = Math.ceil((minAttendancePercentage / 100) * denominator);
     const needShowDays = Math.max(0, requiredNumerator - numerator);
-    return { canSkip: 0, needShowDays };
+    return { canSkip: 0, needShowDays, emptyDaysLeft: emptyDays.length };
   }
-  return { canSkip: maxSkippable, needShowDays: null };
+  return { canSkip: maxSkippable, needShowDays: null, emptyDaysLeft: emptyDays.length };
 };

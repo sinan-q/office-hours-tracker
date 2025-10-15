@@ -4,7 +4,7 @@ import StatsPanel from './components/StatsPanel';
 import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
 import DataManager from './components/DataManager';
-import { getData, saveData } from './services/storageService';
+import { getData, saveData } from './services/supabaseStorageService';
 import './App.css';
 
 function App() {
@@ -18,8 +18,10 @@ function App() {
 
   // Load data from localStorage on mount
   useEffect(() => {
-    const data = getData();
-    setAppData(data);
+    (async () => {
+      const data = await getData();
+      setAppData(data);
+    })();
   }, []);
 
   // Save data to localStorage whenever appData changes

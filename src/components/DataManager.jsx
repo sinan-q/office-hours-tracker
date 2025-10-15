@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { processImportedJson } from '../services/jsonImportService';
+import { saveData, getData } from '../services/supabaseStorageService';
 
 const DataManager = ({ appData, onImport, onClose }) => {
   const fileInputRef = useRef(null);
@@ -7,16 +8,18 @@ const DataManager = ({ appData, onImport, onClose }) => {
   const [importMethod, setImportMethod] = useState('paste'); // 'paste' or 'file'
 
   const handleExport = () => {
-    const dataStr = JSON.stringify(appData, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `office-hours-data-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    getData().then((data) => {
+      const dataStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `office-hours-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    });
   };
 
   const handleImportClick = () => {
@@ -46,9 +49,10 @@ const DataManager = ({ appData, onImport, onClose }) => {
         throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
       }
       
-      onImport(updatedData);
-      alert('Data imported successfully from file!');
-      onClose();
+  await saveData(updatedData);
+  onImport(updatedData);
+  alert('Data imported successfully from file!');
+  onClose();
     } catch (error) {
       console.error('Error importing JSON:', error);
       alert('Error importing JSON: ' + error.message);
@@ -60,7 +64,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
     }
   };
 
-  const handlePasteImport = () => {
+  const handlePasteImport = async () => {
     if (!pastedJson.trim()) {
       alert('Please paste JSON data first.');
       return;
@@ -84,10 +88,11 @@ const DataManager = ({ appData, onImport, onClose }) => {
         throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
       }
       
-      onImport(updatedData);
-      alert('Data imported successfully from pasted JSON!');
-      setPastedJson('');
-      onClose();
+  await saveData(updatedData);
+  onImport(updatedData);
+  alert('Data imported successfully from pasted JSON!');
+  setPastedJson('');
+  onClose();
     } catch (error) {
       console.error('Error parsing pasted JSON:', error);
       alert('Error parsing JSON: ' + error.message);

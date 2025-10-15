@@ -1,16 +1,49 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Office Hours Tracker
 
-Currently, two official plugins are available:
+This is a client-side Office Hours Tracker built with React, Vite, and Tailwind CSS. It helps you track your attendance, working hours, and compliance with minimum requirements for your organization.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- Calendar view for daily status and time entry
+- Edit each day as SHOW, NO SHOW, LEAVE, EXCEPTION, HOLIDAY, WEEKEND, or EMPTY
+- Import/export data in JSON format (supports company format)
+- Statistics panel:
+  - Attendance percentage (with color coding)
+  - Average hours for completed days
+  - Average hours needed for remaining days
+  - Days you can skip (NO SHOW) while maintaining minimum attendance
+  - If attendance is below minimum even if you attend all remaining days, shows how many more SHOW days are needed
+  - Shows number of EMPTY days left
+- Settings for minimum hours per day and minimum attendance percentage
+- Data is stored in browser localStorage
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting Started
 
-## Expanding the ESLint configuration
+1. **Install dependencies:**
+	```sh
+	npm install
+	```
+2. **Start the development server:**
+	```sh
+	npm run dev
+	```
+3. **Open your browser:**
+	Visit [http://localhost:5173](http://localhost:5173)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Usage
+
+- Click on any day in the calendar to edit its status and time.
+- Use the Data Manager to import/export your data.
+- View your statistics in the right panel.
+- Adjust minimum requirements in the settings panel.
+
+## Technologies Used
+
+- React
+- Vite
+- Tailwind CSS
+
+## License
+
+MIT

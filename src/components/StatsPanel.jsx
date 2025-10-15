@@ -91,7 +91,7 @@ const StatsPanel = ({ appData, currentDate }) => {
                  {daysCanSkip.needShowDays} {daysCanSkip.needShowDays === 1 ? 'day' : 'days' }
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                Attendance is below {settings.minAttendancePercentage}% even if all you go all Remaining days
+                If you go Remaining {daysCanSkip.emptyDaysLeft} day{daysCanSkip.emptyDaysLeft === 1 ? '' : 's'}
               </p>
             </>
           ) : (
@@ -103,7 +103,7 @@ const StatsPanel = ({ appData, currentDate }) => {
                 {daysCanSkip.canSkip} {daysCanSkip.canSkip === 1 ? 'day' : 'days'}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                While maintaining {settings.minAttendancePercentage}% attendance
+                If you go Remaining {daysCanSkip.emptyDaysLeft - daysCanSkip.canSkip} day{daysCanSkip.emptyDaysLeft === 1 ? '' : 's'}
               </p>
             </>
           )}
