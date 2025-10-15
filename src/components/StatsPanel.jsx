@@ -94,20 +94,6 @@ const StatsPanel = ({ appData, currentDate }) => {
         </div>
       )}
 
-      {/* Settings Display */}
-      <div className="bg-gray-700 rounded-lg p-4 mt-6">
-        <h3 className="text-sm font-semibold text-gray-400 mb-2">
-          Current Settings
-        </h3>
-        <div className="space-y-2 text-sm text-gray-300">
-          <p>
-            Min Hours/Day: <span className="font-semibold">{Math.floor(settings.minHoursPerDay / 60)}h {settings.minHoursPerDay % 60}m</span>
-          </p>
-          <p>
-            Min Attendance: <span className="font-semibold">{settings.minAttendancePercentage}%</span>
-          </p>
-        </div>
-      </div>
     </div>
   );
 };
