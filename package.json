@@ -2,13 +2,15 @@
   "name": "office-hours-tracker",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://sinan-q.github.io/office-hours-tracker",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "vite build && gh-pages -d dist"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.75.0",
