@@ -129,7 +129,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+  <div className="min-h-screen text-white" style={{ background: '#181f2a', boxShadow: 'none', border: 'none', margin: 0, padding: 0 }}>
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4 py-6">
