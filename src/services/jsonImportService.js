@@ -37,10 +37,13 @@ const mapStatus = (dayStatus, backgroundStatus) => {
  * Expected format of imported JSON:
  * [
  *   {
- *     "date": "2025-10-15",
+ *     "swipeDtls": [...],
  *     "dayStatus": "At Office",
  *     "backgroundStatus": "",
- *     "timeInMinutes": 480
+ *     "timeCat": "363",
+ *     "dayName": "THURSDAY",
+ *     "booking": false,
+ *     "date": "2025-09-18"
  *   },
  *   ...
  * ]
@@ -53,7 +56,7 @@ export const processImportedJson = (jsonData, existingData) => {
   }
 
   jsonData.forEach((entry) => {
-    const { date, dayStatus, backgroundStatus, timeInMinutes } = entry;
+    const { date, dayStatus, backgroundStatus, timeCat } = entry;
 
     if (!date) {
       console.warn('Skipping entry without date:', entry);
@@ -71,10 +74,10 @@ export const processImportedJson = (jsonData, existingData) => {
     // Map the status
     const internalStatus = mapStatus(dayStatus, backgroundStatus);
 
-    // Determine time value
+    // Determine time value - parse from timeCat (it's a string number in minutes)
     let time = null;
-    if (internalStatus === 'SHOW' || (timeInMinutes && timeInMinutes > 0)) {
-      time = timeInMinutes || 0;
+    if (timeCat !== undefined && timeCat !== null && timeCat !== '') {
+      time = parseInt(timeCat) || 0;
     }
 
     // Ensure nested structure exists
