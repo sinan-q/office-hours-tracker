@@ -172,3 +172,114 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   const minutes = Math.round(avgMinutesNeeded % 60);
   return `${hours}h ${minutes}m`;
 };
+
+/**
+ * Calculate how many days can be skipped (NO SHOW) while maintaining minimum attendance
+ * Only for current month
+ */
+export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
+  const today = new Date();
+  const isCurrentMonth =
+    currentDate.getFullYear() === today.getFullYear() &&
+    currentDate.getMonth() === today.getMonth();
+  if (!isCurrentMonth) {
+    return null;
+  }
+
+  // Gather all workdays and their statuses
+  const year = currentDate.getFullYear().toString();
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  let showDays = [];
+  let noShowDays = [];
+  let emptyDays = [];
+  for (let day = 1; day <= lastDay; day++) {
+    const dayStr = day.toString().padStart(2, '0');
+    const dayData = getDayData(calendarData, year, month, dayStr);
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    if (!isWeekend) {
+      if (dayData) {
+        if (dayData.status === 'SHOW') {
+          showDays.push(day);
+        } else if (dayData.status === 'NO SHOW') {
+          noShowDays.push(day);
+        } else if (dayData.status === 'EMPTY') {
+          emptyDays.push(day);
+        }
+      } else {
+        emptyDays.push(day);
+      }
+    }
+  }
+
+  // Simulate converting EMPTY days to NO SHOW, rest as SHOW, using attendance logic
+  let maxSkippable = 0;
+  const minAttendancePercentage = settings.minAttendancePercentage;
+  if (showDays.length + noShowDays.length + emptyDays.length === 0) {
+    return 'N/A';
+  }
+  for (let skips = 0; skips <= emptyDays.length; skips++) {
+    // Build a simulated calendar for this scenario
+    let numerator = 0;
+    let denominator = 0;
+    let skipCount = 0;
+    for (let day = 1; day <= lastDay; day++) {
+      const dayStr = day.toString().padStart(2, '0');
+      const dayData = getDayData(calendarData, year, month, dayStr);
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      let status, time;
+      if (!isWeekend) {
+        if (dayData) {
+          status = dayData.status;
+          time = dayData.time || 0;
+        } else {
+          status = 'EMPTY';
+          time = 0;
+        }
+        if (status === 'EMPTY') {
+          // Simulate skips as NO SHOW, rest as SHOW
+          if (skipCount < skips) {
+            status = 'NO SHOW';
+            skipCount++;
+          } else {
+            status = 'SHOW';
+          }
+        }
+        // Denominator: SHOW or NO SHOW
+        if (status === 'SHOW' || status === 'NO SHOW') {
+          denominator++;
+        }
+        // Numerator: SHOW or (WEEKEND/HOLIDAY with time > 0)
+        if (status === 'SHOW') {
+          numerator++;
+        } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+          numerator++;
+        }
+      } else {
+        // For weekends, use original logic
+        if (dayData) {
+          status = dayData.status;
+          time = dayData.time || 0;
+        } else {
+          status = 'EMPTY';
+          time = 0;
+        }
+        // Numerator: (WEEKEND/HOLIDAY with time > 0)
+        if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+          numerator++;
+        }
+      }
+    }
+    const percent = denominator === 0 ? 0 : (numerator / denominator) * 100;
+    if (percent >= minAttendancePercentage) {
+      maxSkippable = skips;
+    } else {
+      break;
+    }
+  }
+  return maxSkippable;
+};

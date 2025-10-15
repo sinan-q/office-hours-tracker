@@ -86,8 +86,8 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
           <label className="block text-sm font-semibold text-gray-400 mb-2">
             Status
           </label>
-          {status === 'EMPTY' || status === 'SHOW' ? (
-            // Show "Add Status" button when status is EMPTY or SHOW
+          {status === 'EMPTY' ? (
+            // Show "Add Status" button when status is EMPTY
             <button
               onClick={handleAddStatus}
               className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
@@ -96,19 +96,23 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
               Add Status
             </button>
           ) : (
-            // Show dropdown and clear button for other statuses
+            // Show dropdown and clear button for SHOW and other statuses
             <div className="flex gap-2">
-              <select
-                value={status}
-                onChange={handleStatusChange}
-                className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="NO SHOW">No Show</option>
-                <option value="LEAVE">Leave</option>
-                <option value="EXCEPTION">Exception</option>
-                <option value="HOLIDAY">Holiday</option>
-                <option value="WEEKEND">Weekend</option>
-              </select>
+              {status !== 'SHOW' ? (
+                <select
+                  value={status}
+                  onChange={handleStatusChange}
+                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="NO SHOW">No Show</option>
+                  <option value="LEAVE">Leave</option>
+                  <option value="EXCEPTION">Exception</option>
+                  <option value="HOLIDAY">Holiday</option>
+                  <option value="WEEKEND">Weekend</option>
+                </select>
+              ) : (
+                <div className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg flex items-center">SHOW</div>
+              )}
               <button
                 onClick={handleClearStatus}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
