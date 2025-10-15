@@ -8,8 +8,8 @@ import {
 const StatsPanel = ({ appData, currentDate }) => {
   const { calendarData, settings } = appData;
 
-  const attendancePercentage = calculateAttendancePercentage(calendarData, settings);
-  const avgHoursTillYesterday = calculateAvgHoursTillYesterday(calendarData, settings);
+  const attendancePercentage = calculateAttendancePercentage(calendarData, settings, currentDate);
+  const avgHoursTillYesterday = calculateAvgHoursTillYesterday(calendarData, settings, currentDate);
   const avgHoursNeeded = calculateAvgHoursNeeded(calendarData, settings, currentDate);
 
   return (
@@ -36,15 +36,17 @@ const StatsPanel = ({ appData, currentDate }) => {
         </p>
       </div>
 
-      {/* Average Hours Needed (Remaining Days) */}
-      <div className="bg-gray-700 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-gray-400 mb-2">
-          Avg. Hours Needed (Remaining Days)
-        </h3>
-        <p className="text-3xl font-bold text-white">
-          {avgHoursNeeded}
-        </p>
-      </div>
+      {/* Average Hours Needed (Remaining Days) - Only show for current month */}
+      {avgHoursNeeded !== null && (
+        <div className="bg-gray-700 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-gray-400 mb-2">
+            Avg. Hours Needed (Remaining Days)
+          </h3>
+          <p className="text-3xl font-bold text-white">
+            {avgHoursNeeded}
+          </p>
+        </div>
+      )}
 
       {/* Settings Display */}
       <div className="bg-gray-700 rounded-lg p-4 mt-6">

@@ -20,33 +20,34 @@ const getDayData = (calendarData, year, month, day) => {
 };
 
 /**
- * Calculate attendance percentage
+ * Calculate attendance percentage for the current month
  * Numerator: Days where status is SHOW OR (status is WEEKEND/HOLIDAY AND time > 0)
  * Denominator: Days where status is SHOW OR NO SHOW
  */
-export const calculateAttendancePercentage = (calendarData, settings) => {
+export const calculateAttendancePercentage = (calendarData, settings, currentDate) => {
   let numerator = 0;
   let denominator = 0;
 
-  // Iterate through all years, months, and days in calendarData
-  for (const year in calendarData) {
-    for (const month in calendarData[year]) {
-      for (const day in calendarData[year][month]) {
-        const dayData = calendarData[year][month][day];
-        const status = dayData.status;
-        const time = dayData.time || 0;
+  const year = currentDate.getFullYear().toString();
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
 
-        // Count for denominator: SHOW or NO SHOW
-        if (status === 'SHOW' || status === 'NO SHOW') {
-          denominator++;
-        }
+  // Only iterate through the current month
+  if (calendarData[year] && calendarData[year][month]) {
+    for (const day in calendarData[year][month]) {
+      const dayData = calendarData[year][month][day];
+      const status = dayData.status;
+      const time = dayData.time || 0;
 
-        // Count for numerator: SHOW or (WEEKEND/HOLIDAY with time > 0)
-        if (status === 'SHOW') {
-          numerator++;
-        } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
-          numerator++;
-        }
+      // Count for denominator: SHOW or NO SHOW
+      if (status === 'SHOW' || status === 'NO SHOW') {
+        denominator++;
+      }
+
+      // Count for numerator: SHOW or (WEEKEND/HOLIDAY with time > 0)
+      if (status === 'SHOW') {
+        numerator++;
+      } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+        numerator++;
       }
     }
   }
@@ -59,23 +60,25 @@ export const calculateAttendancePercentage = (calendarData, settings) => {
 };
 
 /**
- * Calculate average hours for all completed days before today
+ * Calculate average hours for all completed days before today in the current month
  * Only considers days with status SHOW
  */
-export const calculateAvgHoursTillYesterday = (calendarData, settings) => {
+export const calculateAvgHoursTillYesterday = (calendarData, settings, currentDate) => {
   let totalMinutes = 0;
   let count = 0;
 
-  for (const year in calendarData) {
-    for (const month in calendarData[year]) {
-      for (const day in calendarData[year][month]) {
-        const dayData = calendarData[year][month][day];
-        
-        // Only consider SHOW days before today
-        if (dayData.status === 'SHOW' && isBeforeToday(parseInt(year), parseInt(month), parseInt(day))) {
-          totalMinutes += dayData.time || 0;
-          count++;
-        }
+  const year = currentDate.getFullYear().toString();
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+
+  // Only iterate through the current month
+  if (calendarData[year] && calendarData[year][month]) {
+    for (const day in calendarData[year][month]) {
+      const dayData = calendarData[year][month][day];
+      
+      // Only consider SHOW days before today
+      if (dayData.status === 'SHOW' && isBeforeToday(parseInt(year), parseInt(month), parseInt(day))) {
+        totalMinutes += dayData.time || 0;
+        count++;
       }
     }
   }
@@ -91,20 +94,31 @@ export const calculateAvgHoursTillYesterday = (calendarData, settings) => {
 };
 
 /**
- * Calculate average hours needed per day for remaining days
+ * Calculate average hours needed per day for remaining days in the current month
  * Formula: (TotalRequired - TotalLogged) / RemainingDays
- * - TotalRequired: minHoursPerDay * (SHOW days + EMPTY days)
+ * - TotalRequired: minHoursPerDay * (SHOW days + EMPTY/unlogged weekdays)
  * - TotalLogged: Sum of all logged time
- * - RemainingDays: EMPTY days from today to end of month
+ * - RemainingDays: EMPTY/unlogged weekdays from today to end of month
  */
 export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => {
   const year = currentDate.getFullYear().toString();
   const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
   
+  // Check if we're viewing the current month
+  const today = new Date();
+  const isCurrentMonth = 
+    currentDate.getFullYear() === today.getFullYear() && 
+    currentDate.getMonth() === today.getMonth();
+  
+  if (!isCurrentMonth) {
+    return null; // Return null for non-current months
+  }
+  
   let totalLogged = 0;
   let showDaysCount = 0;
-  let emptyDaysCount = 0;
-  let remainingEmptyDays = 0;
+  let emptyWeekdaysCount = 0;
+  let remainingEmptyWeekdays = 0;
+  const todayDay = today.getDate();
 
   // Get the last day of the current month
   const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -112,40 +126,43 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   for (let day = 1; day <= lastDay; day++) {
     const dayStr = day.toString().padStart(2, '0');
     const dayData = getDayData(calendarData, year, month, dayStr);
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const isTodayOrLater = day >= todayDay;
     
-    if (dayData) {
+    if (dayData && (dayData.status === 'SHOW' || (dayData.status && dayData.status !== 'EMPTY'))) {
+      // Day has a status that's been explicitly set (not EMPTY)
       if (dayData.status === 'SHOW') {
         showDaysCount++;
         totalLogged += dayData.time || 0;
-      } else if (dayData.time) {
-        // Any other status with time logged
+      } else if (dayData.time && dayData.time > 0) {
+        // Any other status with time logged (e.g., worked on weekend/holiday)
         totalLogged += dayData.time;
       }
+      // If status is NO SHOW, LEAVE, EXCEPTION, HOLIDAY, or WEEKEND without time, don't count toward requirements
     } else {
-      // EMPTY day
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const dayOfWeek = date.getDay();
-      
-      // Don't count weekends as empty workdays
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-        emptyDaysCount++;
+      // No data OR status is EMPTY - treat as unlogged day
+      if (!isWeekend) {
+        // Only count weekdays
+        emptyWeekdaysCount++;
         
         // Count as remaining if today or after
-        if (isTodayOrAfter(parseInt(year), parseInt(month), day)) {
-          remainingEmptyDays++;
+        if (isTodayOrLater) {
+          remainingEmptyWeekdays++;
         }
       }
     }
   }
 
-  if (remainingEmptyDays === 0) {
+  if (remainingEmptyWeekdays === 0) {
     return 'N/A';
   }
 
-  const totalRequiredDays = showDaysCount + emptyDaysCount;
+  const totalRequiredDays = showDaysCount + emptyWeekdaysCount;
   const totalRequiredMinutes = totalRequiredDays * settings.minHoursPerDay;
   const remainingMinutes = totalRequiredMinutes - totalLogged;
-  const avgMinutesNeeded = remainingMinutes / remainingEmptyDays;
+  const avgMinutesNeeded = remainingMinutes / remainingEmptyWeekdays;
 
   if (avgMinutesNeeded <= 0) {
     return '0h 0m';
