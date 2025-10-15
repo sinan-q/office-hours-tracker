@@ -218,8 +218,9 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
   let maxSkippable = 0;
   const minAttendancePercentage = settings.minAttendancePercentage;
   if (showDays.length + noShowDays.length + emptyDays.length === 0) {
-    return 'N/A';
+    return { canSkip: 'N/A', needShowDays: null };
   }
+  let lastPercent = 0;
   for (let skips = 0; skips <= emptyDays.length; skips++) {
     // Build a simulated calendar for this scenario
     let numerator = 0;
@@ -275,11 +276,59 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
       }
     }
     const percent = denominator === 0 ? 0 : (numerator / denominator) * 100;
+    lastPercent = percent;
     if (percent >= minAttendancePercentage) {
       maxSkippable = skips;
     } else {
       break;
     }
   }
-  return maxSkippable;
+  // If even with all EMPTY days as SHOW, percent is below required, show how many more SHOW days needed
+  if (maxSkippable === 0 && lastPercent < minAttendancePercentage) {
+    // Calculate how many more SHOW days needed
+    // Denominator: all SHOW and NO SHOW days (including all EMPTY as SHOW)
+    let numerator = 0;
+    let denominator = 0;
+    for (let day = 1; day <= lastDay; day++) {
+      const dayStr = day.toString().padStart(2, '0');
+      const dayData = getDayData(calendarData, year, month, dayStr);
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      let status, time;
+      if (!isWeekend) {
+        if (dayData) {
+          status = dayData.status;
+          time = dayData.time || 0;
+        } else {
+          status = 'SHOW'; // treat all EMPTY as SHOW
+          time = 0;
+        }
+        if (status === 'SHOW' || status === 'NO SHOW') {
+          denominator++;
+        }
+        if (status === 'SHOW') {
+          numerator++;
+        } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+          numerator++;
+        }
+      } else {
+        if (dayData) {
+          status = dayData.status;
+          time = dayData.time || 0;
+        } else {
+          status = 'EMPTY';
+          time = 0;
+        }
+        if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+          numerator++;
+        }
+      }
+    }
+    // Calculate how many more SHOW days needed
+    const requiredNumerator = Math.ceil((minAttendancePercentage / 100) * denominator);
+    const needShowDays = Math.max(0, requiredNumerator - numerator);
+    return { canSkip: 0, needShowDays };
+  }
+  return { canSkip: maxSkippable, needShowDays: null };
 };

@@ -13,7 +13,6 @@ const StatsPanel = ({ appData, currentDate }) => {
   const avgHoursTillYesterday = calculateAvgHoursTillYesterday(calendarData, settings, currentDate);
   const avgHoursNeeded = calculateAvgHoursNeeded(calendarData, settings, currentDate);
   const daysCanSkip = calculateDaysCanSkip(calendarData, settings, currentDate);
-
   // Determine color for attendance percentage
   const getAttendanceColor = () => {
     if (attendancePercentage === 'N/A') return 'text-gray-400';
@@ -79,18 +78,35 @@ const StatsPanel = ({ appData, currentDate }) => {
         </div>
       )}
 
-      {/* Days Can Skip - Only show for current month */}
+      {/* Days Can Skip or Need More SHOW Days - Only show for current month */}
       {daysCanSkip !== null && (
         <div className="bg-gray-700 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-gray-400 mb-2">
-            Days You Can Skip (NO SHOW)
-          </h3>
-          <p className="text-3xl font-bold text-blue-400">
-            {daysCanSkip} {daysCanSkip === 1 ? 'day' : 'days'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            While maintaining {settings.minAttendancePercentage}% attendance
-          </p>
+          
+          {daysCanSkip.needShowDays ? (
+            <>
+              <h3 className="text-sm font-semibold text-gray-400 mb-2">
+                Days You need to come on Weekends
+              </h3>
+              <p className="text-3xl font-bold text-red-400">
+                 {daysCanSkip.needShowDays} {daysCanSkip.needShowDays === 1 ? 'day' : 'days' }
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Attendance is below {settings.minAttendancePercentage}% even if all you go all Remaining days
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 className="text-sm font-semibold text-gray-400 mb-2">
+                Days You Can Skip (NO SHOW)
+              </h3>
+              <p className="text-3xl font-bold text-blue-400">
+                {daysCanSkip.canSkip} {daysCanSkip.canSkip === 1 ? 'day' : 'days'}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                While maintaining {settings.minAttendancePercentage}% attendance
+              </p>
+            </>
+          )}
         </div>
       )}
 
