@@ -38,15 +38,13 @@ export const calculateAttendancePercentage = (calendarData, settings, currentDat
       const status = dayData.status;
       const time = dayData.time || 0;
 
-      // Count for denominator: SHOW or NO SHOW
-      if (status === 'SHOW' || status === 'NO SHOW') {
+      // Count for denominator: SHOW, NO SHOW, or EXCEPTION
+      if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION' || status === 'LEAVE') {
         denominator++;
       }
 
-      // Count for numerator: SHOW or (WEEKEND/HOLIDAY with time > 0)
-      if (status === 'SHOW') {
-        numerator++;
-      } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+      // Count for numerator using isAttendanceDay helper
+      if (isAttendanceDay(status, time)) {
         numerator++;
       }
     }
@@ -207,6 +205,8 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
           noShowDays.push(day);
         } else if (dayData.status === 'EMPTY') {
           emptyDays.push(day);
+        } else if (dayData.status === 'EXCEPTION') {
+          showDays.push(day); // Treat EXCEPTION as a SHOW day
         }
       } else {
         emptyDays.push(day);
@@ -250,14 +250,12 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
             status = 'SHOW';
           }
         }
-        // Denominator: SHOW or NO SHOW
-        if (status === 'SHOW' || status === 'NO SHOW') {
+        // Denominator: SHOW, NO SHOW, or EXCEPTION
+        if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION') {
           denominator++;
         }
-        // Numerator: SHOW or (WEEKEND/HOLIDAY with time > 0)
-        if (status === 'SHOW') {
-          numerator++;
-        } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+        // Numerator: Use isAttendanceDay helper
+        if (isAttendanceDay(status, time)) {
           numerator++;
         }
       } else {
@@ -304,15 +302,14 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
           status = 'SHOW'; // treat all EMPTY as SHOW
           time = 0;
         }
-        if (status === 'SHOW' || status === 'NO SHOW') {
+        if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION') {
           denominator++;
         }
-        if (status === 'SHOW') {
-          numerator++;
-        } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+        if (isAttendanceDay(status, time)) {
           numerator++;
         }
       } else {
+        // For weekends, use original logic
         if (dayData) {
           status = dayData.status;
           time = dayData.time || 0;
@@ -320,15 +317,31 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
           status = 'EMPTY';
           time = 0;
         }
+        // Numerator: (WEEKEND/HOLIDAY with time > 0)
         if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
           numerator++;
         }
       }
     }
-    // Calculate how many more SHOW days needed
-    const requiredNumerator = Math.ceil((minAttendancePercentage / 100) * denominator);
-    const needShowDays = Math.max(0, requiredNumerator - numerator);
-    return { canSkip: 0, needShowDays, emptyDaysLeft: emptyDays.length };
+    const percent = denominator === 0 ? 0 : (numerator / denominator) * 100;
+    if (percent >= minAttendancePercentage) {
+      maxSkippable = emptyDays.length;
+    } else {
+      // Calculate exact number of additional SHOW days needed
+      const additionalShowsNeeded = Math.ceil(((minAttendancePercentage / 100) * denominator) - numerator);
+      return { canSkip: 0, needShowDays: additionalShowsNeeded, emptyDaysLeft: emptyDays.length };
+    }
   }
-  return { canSkip: maxSkippable, needShowDays: null, emptyDaysLeft: emptyDays.length };
+  return { canSkip: maxSkippable, needShowDays: null, emptyDaysLeft: emptyDays.length - maxSkippable };
+};
+
+// Helper function to determine if a day should be included in attendance calculations
+const isAttendanceDay = (status, time) => {
+  // Include SHOW, WEEKEND/HOLIDAY with time > 0, EXCEPTION, and LEAVE days
+  if (status === 'SHOW' || status === 'EXCEPTION' || status === 'LEAVE') {
+    return true;
+  } else if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
+    return true;
+  }
+  return false;
 };

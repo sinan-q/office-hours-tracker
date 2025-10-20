@@ -25,7 +25,8 @@ const mapStatus = (dayStatus, backgroundStatus) => {
   if (dayStatus === 'No Show') return 'NO SHOW';
   if (dayStatus === 'Branch Holiday') return 'HOLIDAY';
   if (dayStatus === 'Weekend') return 'WEEKEND';
-  if (dayStatus === 'Leave' || dayStatus === 'Exception') return 'LEAVE';
+  if (dayStatus === 'Leave') return 'LEAVE';
+  if (dayStatus === 'Exception') return 'EXCEPTION';
   if (dayStatus === 'At Office') return 'SHOW';
 
   // Default to EMPTY if unknown
