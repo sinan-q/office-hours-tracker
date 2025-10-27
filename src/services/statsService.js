@@ -58,8 +58,7 @@ export const calculateAttendancePercentage = (calendarData, settings, currentDat
 };
 
 /**
- * Calculate average hours for all completed days before today in the current month
- * Only considers days with status SHOW
+ * Calculate average hours for all days with logged time, including today if logged
  */
 export const calculateAvgHoursTillYesterday = (calendarData, settings, currentDate) => {
   let totalMinutes = 0;
@@ -67,15 +66,22 @@ export const calculateAvgHoursTillYesterday = (calendarData, settings, currentDa
 
   const year = currentDate.getFullYear().toString();
   const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+  const today = new Date();
+  const todayStr = today.getDate().toString().padStart(2, '0');
+  const isCurrentMonth = 
+    currentDate.getFullYear() === today.getFullYear() && 
+    currentDate.getMonth() === today.getMonth();
 
   // Only iterate through the current month
   if (calendarData[year] && calendarData[year][month]) {
     for (const day in calendarData[year][month]) {
       const dayData = calendarData[year][month][day];
+      const time = dayData.time || 0;
+      const isToday = isCurrentMonth && day === todayStr;
       
-      // Only consider SHOW days before today
-      if (dayData.status === 'SHOW' && isBeforeToday(parseInt(year), parseInt(month), parseInt(day))) {
-        totalMinutes += dayData.time || 0;
+      // Include days before today and today if it has time logged
+      if (time > 0 && (isBeforeToday(parseInt(year), parseInt(month), parseInt(day)) || isToday)) {
+        totalMinutes += time;
         count++;
       }
     }
@@ -109,12 +115,14 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
     currentDate.getMonth() === today.getMonth();
   
   if (!isCurrentMonth) {
-    return null; // Return null for non-current months
+    return {
+      average: null,
+      remainingDays: 0
+    }; // Return null for non-current months
   }
   
   let totalLogged = 0;
   let showDaysCount = 0;
-  let emptyWeekdaysCount = 0;
   let remainingEmptyWeekdays = 0;
   const todayDay = today.getDate();
 
@@ -131,22 +139,32 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
     
     if (dayData && (dayData.status === 'SHOW' || (dayData.status && dayData.status !== 'EMPTY'))) {
       // Day has a status that's been explicitly set (not EMPTY)
+      const isToday = day === todayDay;
+      const time = dayData.time || 0;
+      const isUnloggedToday = isToday && (!time || time === 0);
+
       if (dayData.status === 'SHOW') {
-        showDaysCount++;
-        totalLogged += dayData.time || 0;
-      } else if (dayData.time && dayData.time > 0) {
+        // For today, only count in showDaysCount if time is logged
+        if (!isToday || time > 0) {
+          showDaysCount++;
+          totalLogged += time;
+        }
+        // If today has no time logged, count it in remaining days
+        if (isUnloggedToday) {
+          remainingEmptyWeekdays++;
+        }
+      } else if (time > 0) {
         // Any other status with time logged (e.g., worked on weekend/holiday)
-        totalLogged += dayData.time;
+        showDaysCount++;
+        totalLogged += time;
       }
       // If status is NO SHOW, LEAVE, EXCEPTION, HOLIDAY, or WEEKEND without time, don't count toward requirements
     } else {
       // No data OR status is EMPTY - treat as unlogged day
       if (!isWeekend) {
-        // Only count weekdays
-        emptyWeekdaysCount++;
-        
-        // Count as remaining if today or after
-        if (isTodayOrLater) {
+        const isToday = day === todayDay
+        // Count as remaining if after today, or if it's today
+        if (day > todayDay || isToday) {
           remainingEmptyWeekdays++;
         }
       }
@@ -154,21 +172,33 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   }
 
   if (remainingEmptyWeekdays === 0) {
-    return 'N/A';
+    return {
+      average: 'N/A',
+      remainingDays: 0
+    };
   }
 
-  const totalRequiredDays = showDaysCount + emptyWeekdaysCount;
+  // There are no separate "total empty weekdays" in this calculation;
+  // use the remainingEmptyWeekdays (weekdays still to be worked) when
+  // computing total required days for the remaining-period calculation.
+  const totalRequiredDays = showDaysCount + remainingEmptyWeekdays;
   const totalRequiredMinutes = totalRequiredDays * settings.minHoursPerDay;
   const remainingMinutes = totalRequiredMinutes - totalLogged;
   const avgMinutesNeeded = remainingMinutes / remainingEmptyWeekdays;
 
   if (avgMinutesNeeded <= 0) {
-    return '0h 0m';
+    return {
+      average: '0h 0m',
+      remainingDays: remainingEmptyWeekdays
+    };
   }
 
   const hours = Math.floor(avgMinutesNeeded / 60);
   const minutes = Math.round(avgMinutesNeeded % 60);
-  return `${hours}h ${minutes}m`;
+  return {
+    average: `${hours}h ${minutes}m`,
+    remainingDays: remainingEmptyWeekdays
+  };
 };
 
 /**
