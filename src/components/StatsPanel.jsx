@@ -75,6 +75,9 @@ const StatsPanel = ({ appData, currentDate }) => {
           <p className="text-3xl font-bold text-white">
             {avgHoursNeeded.average}
           </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Total: {avgHoursNeeded.totalNeeded}
+          </p>
         </div>
       )}
 

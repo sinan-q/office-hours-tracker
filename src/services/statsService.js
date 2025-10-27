@@ -117,7 +117,8 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   if (!isCurrentMonth) {
     return {
       average: null,
-      remainingDays: 0
+      remainingDays: 0,
+      totalNeeded: '0h 0m'
     }; // Return null for non-current months
   }
   
@@ -174,7 +175,8 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   if (remainingEmptyWeekdays === 0) {
     return {
       average: 'N/A',
-      remainingDays: 0
+      remainingDays: 0,
+      totalNeeded: '0h 0m'
     };
   }
 
@@ -186,10 +188,17 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   const remainingMinutes = totalRequiredMinutes - totalLogged;
   const avgMinutesNeeded = remainingMinutes / remainingEmptyWeekdays;
 
+  // total remaining minutes needed (can't be negative)
+  const totalRemainingMinutes = Math.max(0, Math.round(remainingMinutes));
+  const totalHours = Math.floor(totalRemainingMinutes / 60);
+  const totalMins = Math.round(totalRemainingMinutes % 60);
+  const totalNeededStr = `${totalHours}h ${totalMins}m`;
+
   if (avgMinutesNeeded <= 0) {
     return {
       average: '0h 0m',
-      remainingDays: remainingEmptyWeekdays
+      remainingDays: remainingEmptyWeekdays,
+      totalNeeded: totalNeededStr
     };
   }
 
@@ -197,7 +206,8 @@ export const calculateAvgHoursNeeded = (calendarData, settings, currentDate) => 
   const minutes = Math.round(avgMinutesNeeded % 60);
   return {
     average: `${hours}h ${minutes}m`,
-    remainingDays: remainingEmptyWeekdays
+    remainingDays: remainingEmptyWeekdays,
+    totalNeeded: totalNeededStr
   };
 };
 
