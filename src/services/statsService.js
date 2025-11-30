@@ -39,7 +39,7 @@ export const calculateAttendancePercentage = (calendarData, settings, currentDat
       const time = dayData.time || 0;
 
       // Count for denominator: SHOW, NO SHOW, or EXCEPTION
-      if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION' || status === 'LEAVE') {
+      if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION' || status === 'LEAVE' || (status === 'HOLIDAY' && time > 0)) {
         denominator++;
       }
 
@@ -291,7 +291,7 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
           }
         }
         // Denominator: SHOW, NO SHOW, or EXCEPTION
-        if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION') {
+        if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION' || (status === 'HOLIDAY' && time > 0)) {
           denominator++;
         }
         // Numerator: Use isAttendanceDay helper
@@ -310,6 +310,10 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
         // Numerator: (WEEKEND/HOLIDAY with time > 0)
         if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
           numerator++;
+        }
+        // Denominator: Include HOLIDAY with time > 0
+        if (status === 'HOLIDAY' && time > 0) {
+          denominator++;
         }
       }
     }
@@ -342,7 +346,7 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
           status = 'SHOW'; // treat all EMPTY as SHOW
           time = 0;
         }
-        if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION') {
+        if (status === 'SHOW' || status === 'NO SHOW' || status === 'EXCEPTION' || (status === 'HOLIDAY' && time > 0)) {
           denominator++;
         }
         if (isAttendanceDay(status, time)) {
@@ -360,6 +364,10 @@ export const calculateDaysCanSkip = (calendarData, settings, currentDate) => {
         // Numerator: (WEEKEND/HOLIDAY with time > 0)
         if ((status === 'WEEKEND' || status === 'HOLIDAY') && time > 0) {
           numerator++;
+        }
+        // Denominator: Include HOLIDAY with time > 0
+        if (status === 'HOLIDAY' && time > 0) {
+          denominator++;
         }
       }
     }
