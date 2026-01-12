@@ -4,7 +4,7 @@ import StatsPanel from './components/StatsPanel';
 import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
 import DataManager from './components/DataManager';
-import { getData, saveData } from './services/supabaseStorageService';
+import * as storageService from './services/unifiedStorageService';
 import './App.css';
 
 function App() {
@@ -15,19 +15,24 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
+  const [storageStatus, setStorageStatus] = useState('online');
 
-  // Load data from localStorage on mount
+  // Load data from storage on mount
   useEffect(() => {
     (async () => {
-      const data = await getData();
-      setAppData(data);
+      const result = await storageService.getData();
+      setAppData(result.data);
+      setStorageStatus(result.source === 'cloud' ? 'online' : 'local');
     })();
   }, []);
 
-  // Save data to localStorage whenever appData changes
+  // Save data to storage whenever appData changes
   useEffect(() => {
     if (appData) {
-      saveData(appData);
+      (async () => {
+        const result = await storageService.saveData(appData);
+        setStorageStatus(result.cloudSynced ? 'online' : 'local');
+      })();
     }
   }, [appData]);
 
@@ -56,7 +61,7 @@ function App() {
 
     setAppData((prevData) => {
       const newData = { ...prevData };
-      
+
       // Ensure nested structure exists
       if (!newData.calendarData[year]) {
         newData.calendarData[year] = {};
@@ -129,13 +134,19 @@ function App() {
   }
 
   return (
-  <div className="min-h-screen text-white" style={{ background: '#181f2a', boxShadow: 'none', border: 'none', margin: 0, padding: 0 }}>
+    <div className="min-h-screen text-white" style={{ background: '#181f2a', boxShadow: 'none', border: 'none', margin: 0, padding: 0 }}>
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h1 className="text-3xl font-bold">Office Hours Tracker</h1>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
+              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${storageStatus === 'online' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
+                }`}>
+                <div className={`w-2 h-2 rounded-full ${storageStatus === 'online' ? 'bg-green-400' : 'bg-orange-400'
+                  }`} />
+                {storageStatus === 'online' ? 'Online' : 'Local Mode'}
+              </div>
               <button
                 onClick={() => setIsDataManagerOpen(true)}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"

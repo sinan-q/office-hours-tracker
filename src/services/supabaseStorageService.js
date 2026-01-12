@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 const TABLE_NAME = 'office_hours_data';
 const DEFAULT_ID = 'default';
 
-const getDefaultData = () => ({
+export const getDefaultData = () => ({
   settings: {
     minHoursPerDay: 300,
     minAttendancePercentage: 80,
@@ -17,7 +17,19 @@ export const getData = async () => {
     .select('*')
     .eq('id', DEFAULT_ID)
     .single();
-  if (error || !data) {
+
+  if (error) {
+    // PGRST116 is code for "The result contains 0 rows" (i.e. new user)
+    // 406 Not Acceptable is also sometimes returned for single() on empty
+    if (error.code === 'PGRST116' || error.code === '406') {
+      return getDefaultData();
+    }
+    // For other errors (network, auth, server), throw so we can fallback
+    console.warn('Supabase error:', error);
+    throw error;
+  }
+
+  if (!data) {
     return getDefaultData();
   }
   return data.value;
@@ -29,5 +41,7 @@ export const saveData = async (value) => {
     .upsert({ id: DEFAULT_ID, value });
   if (error) {
     console.error('Error saving to Supabase:', error);
+    return { success: false, error };
   }
+  return { success: true };
 };
