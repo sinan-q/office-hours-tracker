@@ -84,7 +84,8 @@ export const processImportedJson = (jsonData, existingData) => {
         const firstVal = timeCat.split('-')[0];
         const hours = parseInt(firstVal);
         if (!isNaN(hours)) {
-          time = hours * 60; // Convert hours to minutes
+          // If extracted hour is 0, set to 1 minute, otherwise convert to minutes
+          time = hours === 0 ? 1 : hours * 60;
         }
       }
     }
