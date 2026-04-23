@@ -38,10 +38,11 @@ const mapStatus = (dayStatus, backgroundStatus) => {
  * Expected format of imported JSON:
  * [
  *   {
- *     "swipeDtls": [...],
+ *     "swipeDtls": [
+ *       { "timeSpentCategory": "3-5" }
+ *     ],
  *     "dayStatus": "At Office",
  *     "backgroundStatus": "",
- *     "timeCat": "363",
  *     "dayName": "THURSDAY",
  *     "booking": false,
  *     "date": "2025-09-18"
@@ -57,7 +58,7 @@ export const processImportedJson = (jsonData, existingData) => {
   }
 
   jsonData.forEach((entry) => {
-    const { date, dayStatus, backgroundStatus, timeCat } = entry;
+    const { date, dayStatus, backgroundStatus, swipeDtls } = entry;
 
     if (!date) {
       console.warn('Skipping entry without date:', entry);
@@ -75,10 +76,17 @@ export const processImportedJson = (jsonData, existingData) => {
     // Map the status
     const internalStatus = mapStatus(dayStatus, backgroundStatus);
 
-    // Determine time value - parse from timeCat (it's a string number in minutes)
+    // Determine time value - parse from swipeDtls[0].timeSpentCategory (e.g., "3-5" -> 3 hours -> 180 minutes)
     let time = null;
-    if (timeCat !== undefined && timeCat !== null && timeCat !== '') {
-      time = parseInt(timeCat) || 0;
+    if (swipeDtls && Array.isArray(swipeDtls) && swipeDtls.length > 0) {
+      const timeCat = swipeDtls[0].timeSpentCategory;
+      if (timeCat && typeof timeCat === 'string') {
+        const firstVal = timeCat.split('-')[0];
+        const hours = parseInt(firstVal);
+        if (!isNaN(hours)) {
+          time = hours * 60; // Convert hours to minutes
+        }
+      }
     }
 
     // Ensure nested structure exists

@@ -137,12 +137,12 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {importMethod === 'paste' && (
               <div>
                 <p className="text-sm text-gray-300 mb-3">
-                  Paste JSON data from your company website (array format with date, dayStatus, backgroundStatus, timeCat) or exported app data.
+                  Paste JSON data from your company website (array format with date, dayStatus, backgroundStatus, swipeDtls) or exported app data.
                 </p>
                 <textarea
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
-                  placeholder='[{"swipeDtls":[],"dayStatus":"At Office","backgroundStatus":"","timeCat":"363","dayName":"THURSDAY","booking":false,"date":"2025-09-18"}, ...]'
+                  placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","backgroundStatus":"","dayName":"THURSDAY","booking":false,"date":"2025-09-18"}, ...]'
                   className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm min-h-[150px] resize-y"
                 />
                 <button
