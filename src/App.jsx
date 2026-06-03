@@ -49,8 +49,82 @@ function App() {
     });
   };
 
-  // Day click handler
-  const handleDayClick = (date) => {
+  // Day click (toggle) handler
+  const handleDayToggle = (dateStr) => {
+    const [year, month, day] = dateStr.split('-');
+    const dayData = appData?.calendarData?.[year]?.[month]?.[day];
+
+    const getOriginalStatus = (dateStr, dayData) => {
+      if (dayData?.originalStatus) {
+        return dayData.originalStatus;
+      }
+      if (dayData?.status && dayData.status !== 'SHOW' && dayData.status !== 'NO SHOW') {
+        return dayData.status;
+      }
+      // Determine if it's weekend by date
+      const date = new Date(dateStr);
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      return isWeekend ? 'WEEKEND' : 'EMPTY';
+    };
+
+    // 1. Determine original status
+    const originalStatus = getOriginalStatus(dateStr, dayData);
+
+    // 2. Determine current status
+    const currentStatus = dayData?.status || (new Date(dateStr).getDay() === 0 || new Date(dateStr).getDay() === 6 ? 'WEEKEND' : 'EMPTY');
+
+    let nextStatus;
+    let nextTime;
+
+    if (currentStatus === 'SHOW') {
+      nextStatus = 'NO SHOW';
+      nextTime = null;
+    } else if (currentStatus === 'NO SHOW') {
+      nextStatus = originalStatus;
+      nextTime = null;
+    } else {
+      // Current status is original status (or any other status like EMPTY, WEEKEND, HOLIDAY, LEAVE, EXCEPTION)
+      nextStatus = 'SHOW';
+      nextTime = 1; // 1 minute
+    }
+
+    setAppData((prevData) => {
+      const newData = { ...prevData };
+      if (!newData.calendarData) newData.calendarData = {};
+      if (!newData.calendarData[year]) newData.calendarData[year] = {};
+      if (!newData.calendarData[year][month]) newData.calendarData[year][month] = {};
+
+      const date = new Date(dateStr);
+      const dayOfWeek = date.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const naturalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
+
+      // If next status matches natural default and has no time, we can delete the entry to keep data clean,
+      // UNLESS the original status was HOLIDAY, LEAVE, or EXCEPTION (which aren't naturally determined by the date).
+      if (nextStatus === naturalStatus && nextTime === null && originalStatus === naturalStatus) {
+        delete newData.calendarData[year][month][day];
+        // Clean up empty month/year objects
+        if (Object.keys(newData.calendarData[year][month]).length === 0) {
+          delete newData.calendarData[year][month];
+        }
+        if (Object.keys(newData.calendarData[year]).length === 0) {
+          delete newData.calendarData[year];
+        }
+      } else {
+        newData.calendarData[year][month][day] = {
+          status: nextStatus,
+          time: nextTime,
+          originalStatus: originalStatus
+        };
+      }
+
+      return newData;
+    });
+  };
+
+  // Day edit handler (opens modal)
+  const handleDayEdit = (date) => {
     setSelectedDay(date);
     setIsModalOpen(true);
   };
@@ -70,10 +144,28 @@ function App() {
         newData.calendarData[year][month] = {};
       }
 
+      // Determine originalStatus
+      const existingEntry = prevData?.calendarData?.[year]?.[month]?.[day];
+      let originalStatus = existingEntry?.originalStatus;
+      
+      // If the saved status is a base status (not SHOW and not NO SHOW), update original status
+      if (dayData.status !== 'SHOW' && dayData.status !== 'NO SHOW') {
+        originalStatus = dayData.status;
+      }
+      
+      // If we don't have an original status yet, default it based on the date
+      if (!originalStatus) {
+        const date = new Date(dayData.date);
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        originalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
+      }
+
       // Update the day data
       newData.calendarData[year][month][day] = {
         status: dayData.status,
-        time: dayData.time
+        time: dayData.time,
+        originalStatus: originalStatus
       };
 
       return newData;
@@ -120,7 +212,8 @@ function App() {
     return {
       date: selectedDay,
       status: dayData.status,
-      time: dayData.time
+      time: dayData.time,
+      originalStatus: dayData.originalStatus
     };
   };
 
@@ -177,8 +270,9 @@ function App() {
             <CalendarView
               currentDate={currentDate}
               calendarData={appData.calendarData}
-              onDayClick={handleDayClick}
+              onDayClick={handleDayToggle}
               onNavigate={handleNavigate}
+              onDayEdit={handleDayEdit}
             />
           </div>
         </div>

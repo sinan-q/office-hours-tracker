@@ -98,10 +98,22 @@ export const processImportedJson = (jsonData, existingData) => {
       newCalendarData[year][month] = {};
     }
 
+    // Determine originalStatus for toggle behavior
+    let originalStatus;
+    if (internalStatus !== 'SHOW' && internalStatus !== 'NO SHOW') {
+      originalStatus = internalStatus;
+    } else {
+      const dateObj = new Date(date);
+      const dayOfWeek = dateObj.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      originalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
+    }
+
     // Set the day data
     newCalendarData[year][month][day] = {
       status: internalStatus,
       time: time,
+      originalStatus: originalStatus,
     };
   });
 

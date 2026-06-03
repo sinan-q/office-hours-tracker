@@ -1,7 +1,7 @@
 import React from 'react';
 import DayCell from './DayCell';
 
-const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate }) => {
+const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDayEdit }) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -42,7 +42,8 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate }) => 
     return {
       date: `${yearStr}-${monthStr}-${dayStr}`,
       status: dayData.status,
-      time: dayData.time
+      time: dayData.time,
+      originalStatus: dayData.originalStatus
     };
   };
 
@@ -75,6 +76,7 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate }) => 
         dayData={dayData}
         isToday={isToday(day)}
         onClick={() => onDayClick(dayData.date)}
+        onEdit={() => onDayEdit(dayData.date)}
       />
     );
   }

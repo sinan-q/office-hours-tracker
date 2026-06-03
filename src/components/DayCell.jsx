@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DayCell = ({ dayData, isToday, onClick }) => {
+const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
   const { date, status, time } = dayData;
   
   // Extract day number from date
@@ -51,13 +51,26 @@ const DayCell = ({ dayData, isToday, onClick }) => {
         hover:opacity-90 transition-opacity
         flex flex-col justify-between
         relative
+        group
       `}
     >
-      <div className="text-right font-semibold text-white">
-        {dayNumber}
+      <div className="flex justify-between items-start w-full">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="text-xs text-gray-400 hover:text-white bg-black bg-opacity-20 hover:bg-opacity-40 rounded p-1 transition-opacity md:opacity-0 md:group-hover:opacity-100 opacity-60"
+          title="Edit day details"
+        >
+          ✏️
+        </button>
+        <div className="text-right font-semibold text-white ml-auto">
+          {dayNumber}
+        </div>
       </div>
       {timeDisplay && (
-        <div className="text-xs bg-black bg-opacity-30 rounded px-2 py-1 text-white text-center">
+        <div className="text-xs bg-black bg-opacity-30 rounded px-2 py-1 text-white text-center mt-2">
           {timeDisplay}
         </div>
       )}
