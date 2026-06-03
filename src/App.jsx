@@ -73,19 +73,29 @@ function App() {
 
     // 2. Determine current status
     const currentStatus = dayData?.status || (new Date(dateStr).getDay() === 0 || new Date(dateStr).getDay() === 6 ? 'WEEKEND' : 'EMPTY');
+    const currentTime = dayData?.time;
+
+    // A day is in a "SHOW" state if status is SHOW or if it is a WEEKEND/HOLIDAY with logged time.
+    const isCurrentShow = currentStatus === 'SHOW' || ((currentStatus === 'WEEKEND' || currentStatus === 'HOLIDAY') && currentTime && currentTime > 0);
 
     let nextStatus;
     let nextTime;
 
-    if (currentStatus === 'SHOW') {
+    if (isCurrentShow) {
       nextStatus = 'NO SHOW';
       nextTime = null;
     } else if (currentStatus === 'NO SHOW') {
       nextStatus = originalStatus;
       nextTime = null;
     } else {
-      // Current status is original status (or any other status like EMPTY, WEEKEND, HOLIDAY, LEAVE, EXCEPTION)
-      nextStatus = 'SHOW';
+      // Current status is default/original status (EMPTY, WEEKEND, HOLIDAY, LEAVE, EXCEPTION, etc.)
+      // For weekends and holidays, we log time on the same status (turns purple).
+      // For others (weekdays, leaves, exceptions), we switch to SHOW status (turns green).
+      if (originalStatus === 'WEEKEND' || originalStatus === 'HOLIDAY') {
+        nextStatus = originalStatus;
+      } else {
+        nextStatus = 'SHOW';
+      }
       nextTime = 1; // 1 minute
     }
 
