@@ -33,7 +33,7 @@ const StatsPanel = ({ appData, currentDate }) => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+    <div className="bg-gray-800 rounded-lg p-4 md:p-6 space-y-4">
       <h2 className="text-2xl font-bold text-white mb-6">Statistics</h2>
 
       {/* Attendance Percentage */}

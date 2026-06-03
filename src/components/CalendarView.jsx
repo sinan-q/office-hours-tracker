@@ -63,7 +63,7 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
   // Add empty cells for days before the first of the month
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className="bg-gray-900 min-h-[80px] rounded-lg"></div>
+      <div key={`empty-${i}`} className="bg-gray-900 min-h-[56px] md:min-h-[80px] rounded-md md:rounded-lg"></div>
     );
   }
 
@@ -82,37 +82,37 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6">
+    <div className="bg-gray-800 rounded-lg p-2 md:p-6">
       {/* Header with navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6">
         <button
           onClick={() => onNavigate('prev')}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold"
+          className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base"
         >
           ◀
         </button>
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-lg md:text-2xl font-bold text-white">
           {monthNames[month]} {year}
         </h2>
         <button
           onClick={() => onNavigate('next')}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold"
+          className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base"
         >
           ▶
         </button>
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-1 md:mb-2">
         {weekDays.map((day) => (
-          <div key={day} className="text-center font-semibold text-gray-400 py-2">
+          <div key={day} className="text-center font-semibold text-gray-400 py-1 md:py-2 text-[10px] sm:text-xs md:text-sm">
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-2">
         {calendarDays}
       </div>
     </div>

@@ -31,49 +31,51 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
     }
   };
 
-  // Convert time to hours and minutes display
-  const formatTime = (minutes) => {
+  // Convert time to responsive display elements
+  const renderTime = (minutes) => {
     if (!minutes || minutes === 0) return null;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
+    return (
+      <div className="text-[10px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate">
+        <span className="hidden md:inline">{hours}h {mins}m</span>
+        <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}</span>
+      </div>
+    );
   };
-
-  const timeDisplay = formatTime(time);
 
   return (
     <div
       onClick={onClick}
       className={`
         ${getBackgroundColor()}
-        ${isToday ? 'ring-4 ring-blue-400' : ''}
-        p-2 min-h-[80px] rounded-lg cursor-pointer
+        ${isToday ? 'ring-2 md:ring-4 ring-blue-400' : ''}
+        p-1 md:p-2 min-h-[56px] md:min-h-[80px] rounded-md md:rounded-lg cursor-pointer
         hover:opacity-90 transition-opacity
         flex flex-col justify-between
         relative
         group
       `}
     >
-      <div className="flex justify-between items-start w-full">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          className="text-xs text-gray-400 hover:text-white bg-black bg-opacity-20 hover:bg-opacity-40 rounded p-1 transition-opacity md:opacity-0 md:group-hover:opacity-100 opacity-60"
-          title="Edit day details"
-        >
-          ✏️
-        </button>
-        <div className="text-right font-semibold text-white ml-auto">
-          {dayNumber}
-        </div>
+      {/* Edit button absolute-positioned to save space */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit();
+        }}
+        className="absolute top-0.5 left-0.5 text-[10px] md:text-xs text-gray-400 hover:text-white bg-black bg-opacity-20 hover:bg-opacity-40 rounded p-0.5 md:p-1 transition-opacity md:opacity-0 md:group-hover:opacity-100 opacity-60"
+        title="Edit day details"
+      >
+        ✏️
+      </button>
+
+      {/* Day number at the top right */}
+      <div className="text-right font-semibold text-xs md:text-base text-white w-full pr-0.5 pt-0.5">
+        {dayNumber}
       </div>
-      {timeDisplay && (
-        <div className="text-xs bg-black bg-opacity-30 rounded px-2 py-1 text-white text-center mt-2">
-          {timeDisplay}
-        </div>
-      )}
+
+      {/* Time display at the bottom */}
+      {renderTime(time)}
     </div>
   );
 };
