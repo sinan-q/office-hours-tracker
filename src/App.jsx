@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import CalendarView from './components/CalendarView';
 import StatsPanel from './components/StatsPanel';
+import ActionDock from './components/ActionDock';
 import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
 import DataManager from './components/DataManager';
 import * as storageService from './services/unifiedStorageService';
 import { calculateLeaveBalances } from './services/leaveService';
-import { canSelectPersonalExigency } from './services/exceptionService';
+import { canSelectPersonalExigency, calculateExceptionStats } from './services/exceptionService';
+import { calculateCompOffBalances } from './services/compOffService';
+import { calculateAttendancePercentage } from './services/statsService';
 import './App.css';
 
 function App() {
   // State Management
+  const todayStr = new Date().toISOString().split('T')[0];
   const [appData, setAppData] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [paintMode, setPaintMode] = useState({ active: false, chip: null });
+  const [isMobileStatsOpen, setIsMobileStatsOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -171,6 +178,157 @@ function App() {
   const handleDayEdit = (date) => {
     setSelectedDay(date);
     setIsModalOpen(true);
+  };
+
+  // Open detailed modal for selected day
+  const handleOpenDetailedEdit = (dateStr) => {
+    setSelectedDay(dateStr || selectedDate);
+    setIsModalOpen(true);
+  };
+
+  // Day selection from Calendar
+  const handleSelectDay = (dateStr) => {
+    if (paintMode?.active && paintMode?.chip) {
+      handleApplyChip(dateStr, paintMode.chip);
+    } else {
+      setSelectedDate(dateStr);
+    }
+  };
+
+  // Activate Stamp / Paint Mode
+  const handleActivatePaintMode = (chip) => {
+    setPaintMode({ active: true, chip });
+    if (selectedDate) {
+      handleApplyChip(selectedDate, chip);
+    }
+  };
+
+  // Exit Stamp / Paint Mode
+  const handleExitPaintMode = () => {
+    setPaintMode({ active: false, chip: null });
+  };
+
+  // 1-tap chip application
+  const handleApplyChip = (dateStr, chip) => {
+    if (!dateStr || !chip) return;
+
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const naturalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
+
+    setAppData((prevData) => {
+      const newData = { ...prevData };
+      if (!newData.calendarData) newData.calendarData = {};
+      if (!newData.calendarData[year]) newData.calendarData[year] = {};
+      if (!newData.calendarData[year][month]) newData.calendarData[year][month] = {};
+
+      const existingEntry = prevData?.calendarData?.[year]?.[month]?.[day];
+      let originalStatus = existingEntry?.originalStatus || naturalStatus;
+
+      const origLeaveCategory = existingEntry?.originalLeaveCategory || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveCategory : null);
+      const origLeaveDuration = existingEntry?.originalLeaveDuration || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveDuration : null);
+      const origExceptionCategory = existingEntry?.originalExceptionCategory || (existingEntry?.status === 'EXCEPTION' ? existingEntry.exceptionCategory : null);
+      const origEarnedCompOff = existingEntry?.originalEarnedCompOff ?? existingEntry?.earnedCompOff ?? false;
+
+      let nextStatus = 'EMPTY';
+      let nextTime = null;
+      let nextLeaveCategory = null;
+      let nextLeaveDuration = null;
+      let nextExceptionCategory = null;
+      let nextEarnedCompOff = false;
+
+      if (chip.type === 'SHOW') {
+        if (originalStatus === 'WEEKEND' || originalStatus === 'HOLIDAY') {
+          nextStatus = originalStatus;
+        } else {
+          nextStatus = 'SHOW';
+        }
+        nextTime = 1;
+        nextEarnedCompOff = origEarnedCompOff;
+      } else if (chip.type === 'NO SHOW') {
+        nextStatus = 'NO SHOW';
+        nextTime = null;
+      } else if (chip.type === 'LEAVE') {
+        nextStatus = 'LEAVE';
+        nextTime = null;
+        nextLeaveCategory = chip.leaveCategory;
+        nextLeaveDuration = 1.0;
+      } else if (chip.type === 'EXCEPTION') {
+        nextStatus = 'EXCEPTION';
+        nextTime = null;
+        nextExceptionCategory = chip.exceptionCategory;
+      } else if (chip.type === 'CLEAR') {
+        nextStatus = naturalStatus;
+        nextTime = null;
+        if (originalStatus === 'HOLIDAY' || originalStatus === 'WEEKEND') {
+          nextStatus = originalStatus;
+          nextEarnedCompOff = origEarnedCompOff;
+        }
+      }
+
+      if (nextStatus === naturalStatus && nextTime === null && originalStatus === naturalStatus) {
+        delete newData.calendarData[year][month][day];
+        if (Object.keys(newData.calendarData[year][month]).length === 0) {
+          delete newData.calendarData[year][month];
+        }
+        if (Object.keys(newData.calendarData[year]).length === 0) {
+          delete newData.calendarData[year];
+        }
+      } else {
+        newData.calendarData[year][month][day] = {
+          status: nextStatus,
+          time: nextTime,
+          originalStatus: originalStatus,
+          leaveCategory: nextStatus === 'LEAVE' ? nextLeaveCategory : null,
+          leaveDuration: nextStatus === 'LEAVE' ? nextLeaveDuration : null,
+          originalLeaveCategory: nextLeaveCategory || origLeaveCategory,
+          originalLeaveDuration: nextLeaveDuration || origLeaveDuration,
+          exceptionCategory: nextStatus === 'EXCEPTION' ? nextExceptionCategory : null,
+          originalExceptionCategory: nextExceptionCategory || origExceptionCategory,
+          earnedCompOff: (nextStatus === 'HOLIDAY' || nextStatus === 'WEEKEND') ? nextEarnedCompOff : false,
+          originalEarnedCompOff: origEarnedCompOff
+        };
+      }
+
+      return newData;
+    });
+
+    setSelectedDate(dateStr);
+  };
+
+  // Get data for selected date for ActionDock
+  const getSelectedDayDataForDock = () => {
+    if (!selectedDate || !appData?.calendarData) return null;
+    const [year, month, day] = selectedDate.split('-');
+    const dayData = appData.calendarData?.[year]?.[month]?.[day];
+
+    const date = new Date(selectedDate);
+    const dayOfWeek = date.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    if (!dayData) {
+      return {
+        date: selectedDate,
+        status: isWeekend ? 'WEEKEND' : 'EMPTY',
+        time: null,
+        leaveCategory: null,
+        leaveDuration: null,
+        exceptionCategory: null,
+        earnedCompOff: false
+      };
+    }
+    return {
+      date: selectedDate,
+      status: dayData.status,
+      time: dayData.time,
+      originalStatus: dayData.originalStatus,
+      leaveCategory: dayData.leaveCategory || dayData.originalLeaveCategory || null,
+      leaveDuration: dayData.leaveDuration || dayData.originalLeaveDuration || null,
+      exceptionCategory: dayData.exceptionCategory || dayData.originalExceptionCategory || null,
+      earnedCompOff: dayData.earnedCompOff ?? false
+    };
   };
 
   // Save day handler
@@ -407,17 +565,25 @@ function App() {
     );
   }
 
-  const leaveBalances = appData ? calculateLeaveBalances(appData.settings, appData.calendarData) : null;
+  const leaveBalances = appData ? calculateLeaveBalances(appData.settings, appData.calendarData) : {};
+  const exceptionStats = appData ? calculateExceptionStats(appData.calendarData, selectedDate || currentDate) : {};
+  const compOffBalances = appData ? calculateCompOffBalances(appData.settings?.compOffSettings, appData.calendarData) : {};
+  const attendancePercentage = appData ? calculateAttendancePercentage(appData.calendarData, appData.settings, currentDate) : 'N/A';
 
   return (
     <div className="min-h-screen text-white" style={{ background: '#181f2a', boxShadow: 'none', border: 'none', margin: 0, padding: 0 }}>
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-4 md:py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h1 className="text-3xl font-bold">Office Hours Tracker</h1>
-            <div className="flex gap-3 items-center">
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${storageStatus === 'online' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Office Hours Tracker</h1>
+              <p className="text-gray-400 text-xs md:text-sm mt-1">Track attendance and manage leaves</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${storageStatus === 'online'
+                ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
                 }`}>
                 <div className={`w-2 h-2 rounded-full ${storageStatus === 'online' ? 'bg-green-400' : 'bg-orange-400'
                   }`} />
@@ -425,13 +591,13 @@ function App() {
               </div>
               <button
                 onClick={() => setIsDataManagerOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+                className="px-3 md:px-4 py-1.5 md:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs md:text-sm font-semibold transition-colors"
               >
-                Import/Export Data
+                Import/Export
               </button>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-semibold transition-colors"
+                className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs md:text-sm font-semibold transition-colors"
               >
                 Settings
               </button>
@@ -441,10 +607,10 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-2 md:px-4 py-4 md:py-8">
+      <main className="container mx-auto px-2 md:px-4 py-3 md:py-6 pb-24 md:pb-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Stats Panel */}
-          <div className="lg:col-span-1">
+          {/* Left Column - Stats Panel (Hidden on small screens by default, expandable) */}
+          <div className="hidden lg:block lg:col-span-1">
             <StatsPanel
               appData={appData}
               currentDate={currentDate}
@@ -452,16 +618,68 @@ function App() {
             />
           </div>
 
-          {/* Right Column - Calendar */}
-          <div className="lg:col-span-2">
+          {/* Right Column - Calendar & Action Dock */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Mobile Top Stats Bar (< lg screens) */}
+            <div className="block lg:hidden bg-gray-800/90 border border-gray-700/80 rounded-xl p-2.5 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-bold text-white">
+                    📊 {attendancePercentage === 'N/A' ? 'N/A' : `${attendancePercentage}%`}
+                  </span>
+                  <span className="text-gray-400">·</span>
+                  <span className="text-orange-300 font-medium">
+                    WFH: {exceptionStats?.available ?? 0}
+                  </span>
+                  <span className="text-gray-400">·</span>
+                  <span className="text-emerald-300 font-medium">
+                    CO: {compOffBalances?.available ?? 0}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsMobileStatsOpen(!isMobileStatsOpen)}
+                  className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20"
+                >
+                  {isMobileStatsOpen ? 'Hide Stats ▲' : 'All Stats ▼'}
+                </button>
+              </div>
+
+              {isMobileStatsOpen && (
+                <div className="mt-3 pt-3 border-t border-gray-700">
+                  <StatsPanel
+                    appData={appData}
+                    currentDate={currentDate}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
+                  />
+                </div>
+              )}
+            </div>
+
             <CalendarView
               currentDate={currentDate}
               calendarData={appData.calendarData}
-              onDayClick={handleDayToggle}
+              selectedDate={selectedDate}
+              paintMode={paintMode}
+              onSelectDay={handleSelectDay}
+              onDayClick={handleSelectDay}
               onNavigate={handleNavigate}
-              onDayEdit={handleDayEdit}
+              onDayEdit={handleOpenDetailedEdit}
               onFillRemainingShow={handleFillRemainingShow}
               onResetRemaining={handleResetRemaining}
+            />
+
+            {/* Thumb-Zone Action Dock */}
+            <ActionDock
+              selectedDate={selectedDate}
+              selectedDayData={getSelectedDayDataForDock()}
+              leaveBalances={leaveBalances}
+              exceptionStats={exceptionStats}
+              compOffBalances={compOffBalances}
+              paintMode={paintMode}
+              onApplyChip={handleApplyChip}
+              onActivatePaintMode={handleActivatePaintMode}
+              onExitPaintMode={handleExitPaintMode}
+              onOpenDetailedEdit={handleOpenDetailedEdit}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
+const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, onClick, onEdit = () => {} }) => {
   const { date, status, time } = dayData;
   
   // Extract day number from date
@@ -115,9 +115,10 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
       onClick={onClick}
       className={`
         ${getBackgroundColor()}
-        ${isToday ? 'ring-2 md:ring-4 ring-blue-400' : ''}
-        p-1 md:p-2 min-h-[56px] md:min-h-[80px] rounded-md md:rounded-lg cursor-pointer
-        hover:opacity-90 transition-opacity
+        ${isSelected ? 'ring-2 md:ring-3 ring-indigo-400 ring-offset-2 ring-offset-gray-900 shadow-xl scale-[1.03] z-10' : (isToday ? 'ring-2 md:ring-3 ring-blue-400/80' : '')}
+        ${isPaintMode ? 'cursor-crosshair hover:scale-105 active:scale-95' : 'cursor-pointer hover:opacity-95'}
+        p-1 md:p-2 min-h-[50px] md:min-h-[76px] rounded-md md:rounded-lg
+        transition-all select-none
         flex flex-col justify-between
         relative
         group

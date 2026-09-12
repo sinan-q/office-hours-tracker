@@ -1,7 +1,18 @@
 import React from 'react';
 import DayCell from './DayCell';
 
-const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDayEdit }) => {
+const CalendarView = ({
+  currentDate,
+  calendarData,
+  selectedDate,
+  paintMode,
+  onSelectDay,
+  onDayClick,
+  onNavigate,
+  onDayEdit,
+  onFillRemainingShow,
+  onResetRemaining
+}) => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -81,12 +92,17 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
   // Add cells for each day of the month
   for (let day = 1; day <= daysInMonth; day++) {
     const dayData = getDayData(day);
+    const isSelected = selectedDate === dayData.date;
+    const isPaintActive = paintMode?.active ?? false;
+
     calendarDays.push(
       <DayCell
         key={day}
         dayData={dayData}
         isToday={isToday(day)}
-        onClick={() => onDayClick(dayData.date)}
+        isSelected={isSelected}
+        isPaintMode={isPaintActive}
+        onClick={() => onSelectDay(dayData.date)}
         onEdit={() => onDayEdit(dayData.date)}
       />
     );
