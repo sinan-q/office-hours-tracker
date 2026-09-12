@@ -13,7 +13,7 @@
  * map the backgroundStatus value instead
  */
 
-const mapStatus = (dayStatus, backgroundStatus) => {
+const mapStatus = (dayStatus, backgroundStatus, dayName, dateStr) => {
   // Override rule: If At Office and backgroundStatus exists, use backgroundStatus
   if (dayStatus === 'At Office' && backgroundStatus && backgroundStatus.trim() !== '') {
     // Map the background status
@@ -30,6 +30,22 @@ const mapStatus = (dayStatus, backgroundStatus) => {
   if (dayStatus === 'Leave') return 'LEAVE';
   if (dayStatus === 'Exception') return 'EXCEPTION';
   if (dayStatus === 'At Office') return 'SHOW';
+
+  // Fallback for unpopulated upcoming days:
+  // Check dayName from JSON or calculate day of week from date
+  const upperDayName = dayName ? dayName.toUpperCase() : '';
+  if (upperDayName === 'SATURDAY' || upperDayName === 'SUNDAY') {
+    return 'WEEKEND';
+  }
+  if (dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+      const dayOfWeek = new Date(y, m - 1, d).getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return 'WEEKEND';
+      }
+    }
+  }
 
   // Default to EMPTY if unknown
   return 'EMPTY';
@@ -60,7 +76,7 @@ export const processImportedJson = (jsonData, existingData) => {
   }
 
   jsonData.forEach((entry) => {
-    const { date, dayStatus, backgroundStatus, swipeDtls } = entry;
+    const { date, dayStatus, backgroundStatus, dayName, swipeDtls } = entry;
 
     if (!date) {
       console.warn('Skipping entry without date:', entry);
@@ -75,8 +91,8 @@ export const processImportedJson = (jsonData, existingData) => {
       return;
     }
 
-    // Map the status
-    const internalStatus = mapStatus(dayStatus, backgroundStatus);
+    // Map the status (with fallback to dayName/date for upcoming weekends)
+    const internalStatus = mapStatus(dayStatus, backgroundStatus, dayName, date);
 
     // Determine time value - parse from swipeDtls[0].timeSpentCategory (e.g., "3-5" -> 3 hours -> 180 minutes)
     let time = null;
@@ -105,9 +121,9 @@ export const processImportedJson = (jsonData, existingData) => {
     if (internalStatus !== 'SHOW' && internalStatus !== 'NO SHOW') {
       originalStatus = internalStatus;
     } else {
-      const dateObj = new Date(date);
-      const dayOfWeek = dateObj.getDay();
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const upperDayName = dayName ? dayName.toUpperCase() : '';
+      const dayOfWeek = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getDay();
+      const isWeekend = upperDayName === 'SATURDAY' || upperDayName === 'SUNDAY' || dayOfWeek === 0 || dayOfWeek === 6;
       originalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
     }
 
