@@ -298,7 +298,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
 
             {exceptionCategory === 'PE' ? (
               <p className="text-[11px] text-orange-300/80">
-                🏷️ Displays as <strong>WFH</strong> on the calendar cell. Quota: 4 per quarter (no carry forward).
+                🏷️ Displays as <strong>WFH</strong> on the calendar cell. Quota: {excStats.quota} per quarter (no carry forward).
               </p>
             ) : (
               <p className="text-[11px] text-gray-400">

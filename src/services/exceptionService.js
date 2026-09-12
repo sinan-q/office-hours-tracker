@@ -3,7 +3,7 @@
  * 
  * Rules:
  * - Two categories:
- *   1. Personal Exigencies (PE / WFH): Quota of 4 per quarter, no carry-forward.
+ *   1. Personal Exigencies (PE / WFH): Quota of 6 per quarter, no carry-forward.
  *   2. Other: Uncapped / official exemptions.
  * - Quarters:
  *   Q1: Jan - Mar (months 01, 02, 03)
@@ -17,7 +17,7 @@ export const EXCEPTION_TYPES = {
     code: 'PE',
     name: 'Personal Exigency (WFH)',
     shortBadge: 'WFH',
-    quotaPerQuarter: 4
+    quotaPerQuarter: 6
   },
   OTHER: {
     code: 'OTHER',

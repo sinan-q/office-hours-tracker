@@ -150,7 +150,7 @@ const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
         </div>
 
         <p className="text-[10.5px] text-gray-400 mt-2">
-          {exceptionStats.quarterName} · 4 per quarter (no carry forward).
+          {exceptionStats.quarterName} · {exceptionStats.quota} per quarter (no carry forward).
         </p>
       </div>
 
