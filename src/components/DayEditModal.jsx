@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { LEAVE_TYPES } from '../services/leaveService';
 
-const DayEditModal = ({ dayData, onSave, onClose }) => {
+const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => {
   const [status, setStatus] = useState(dayData?.status || 'EMPTY');
   const [time, setTime] = useState(dayData?.time || 0);
+  const [leaveCategory, setLeaveCategory] = useState(dayData?.leaveCategory || '');
+  const [leaveDuration, setLeaveDuration] = useState(dayData?.leaveDuration ?? 1.0);
 
   useEffect(() => {
     if (dayData) {
       setStatus(dayData.status);
       setTime(dayData.time || 0);
+      setLeaveCategory(dayData.leaveCategory || '');
+      setLeaveDuration(dayData.leaveDuration ?? 1.0);
     }
   }, [dayData]);
 
@@ -16,12 +21,25 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
     return status === 'NO SHOW' || status === 'LEAVE' || status === 'EXCEPTION';
   };
 
+  const isHistorical = asOfDate && dayData?.date && dayData.date <= asOfDate;
+
+  // Calculate effective balance for a category (refund current day's deduction if already using it)
+  const getEffectiveAvailable = (catCode) => {
+    let avail = leaveBalances?.[catCode]?.available ?? 0;
+    if (dayData?.status === 'LEAVE' && dayData?.leaveCategory === catCode) {
+      avail += (parseFloat(dayData?.leaveDuration) || 1.0);
+    }
+    return avail;
+  };
+
   const handleSave = () => {
     const timeValue = isTimeDisabled() ? null : parseInt(time) || 0;
     onSave({
       date: dayData.date,
       status,
-      time: timeValue
+      time: timeValue,
+      leaveCategory: status === 'LEAVE' ? (leaveCategory || null) : null,
+      leaveDuration: status === 'LEAVE' ? (leaveCategory === 'FL' ? 1.0 : parseFloat(leaveDuration) || 1.0) : null
     });
   };
 
@@ -32,6 +50,14 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
     // Clear time if switching to a status that doesn't allow time
     if (newStatus === 'NO SHOW' || newStatus === 'LEAVE' || newStatus === 'EXCEPTION') {
       setTime(0);
+    }
+  };
+
+  const handleLeaveCategoryChange = (e) => {
+    const newCat = e.target.value;
+    setLeaveCategory(newCat);
+    if (newCat === 'FL') {
+      setLeaveDuration(1.0);
     }
   };
 
@@ -50,6 +76,8 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
   const handleClearStatus = () => {
     setStatus('EMPTY');
     setTime(0);
+    setLeaveCategory('');
+    setLeaveDuration(1.0);
   };
 
   // Handle add status button - show dropdown by setting a default status
@@ -68,26 +96,27 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
     });
   };
 
-  // Save is always enabled now - we allow saving any state
-  const isSaveDisabled = false;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+      <div className="bg-gray-800 rounded-xl p-5 md:p-6 w-full max-w-md shadow-2xl border border-gray-700 max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-white mb-4">Edit Day</h2>
         
         {/* Date Display */}
-        <div className="mb-4">
-          <p className="text-gray-300">{formatDate(dayData.date)}</p>
+        <div className="mb-4 bg-gray-700/50 p-2.5 rounded-lg border border-gray-600/50">
+          <p className="text-gray-200 font-medium text-sm">{formatDate(dayData.date)}</p>
+          {isHistorical && status === 'LEAVE' && (
+            <p className="text-[11px] text-amber-400 mt-0.5">
+              📅 Historical date (on or before baseline date — does not deduct from balances).
+            </p>
+          )}
         </div>
 
         {/* Status Dropdown */}
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-400 mb-2">
+          <label className="block text-xs font-semibold text-gray-400 mb-2">
             Status
           </label>
           {status === 'EMPTY' ? (
-            // Show "Add Status" button when status is EMPTY
             <button
               onClick={handleAddStatus}
               className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
@@ -96,13 +125,12 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
               Add Status
             </button>
           ) : (
-            // Show dropdown and clear button for SHOW and other statuses
             <div className="flex gap-2">
               {status !== 'SHOW' ? (
                 <select
                   value={status}
                   onChange={handleStatusChange}
-                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="NO SHOW">No Show</option>
                   <option value="LEAVE">Leave</option>
@@ -111,11 +139,11 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
                   <option value="WEEKEND">Weekend</option>
                 </select>
               ) : (
-                <div className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg flex items-center">SHOW</div>
+                <div className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg flex items-center text-sm font-semibold">SHOW</div>
               )}
               <button
                 onClick={handleClearStatus}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+                className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors text-sm"
                 title="Clear status (set to EMPTY)"
               >
                 Clear
@@ -124,9 +152,106 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
           )}
         </div>
 
+        {/* Leave Details (when status is LEAVE) */}
+        {status === 'LEAVE' && (
+          <div className="mb-5 bg-amber-950/20 border border-amber-500/30 p-3.5 rounded-lg space-y-3.5">
+            <h3 className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+              Leave Details
+            </h3>
+
+            {/* Leave Category Selector */}
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1">
+                Leave Type
+              </label>
+              <select
+                value={leaveCategory}
+                onChange={handleLeaveCategoryChange}
+                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+              >
+                <option value="">Unassigned / Generic Leave</option>
+                {Object.keys(LEAVE_TYPES).map((code) => {
+                  const type = LEAVE_TYPES[code];
+                  const effAvail = getEffectiveAvailable(code);
+                  const isExhausted = !isHistorical && effAvail < 0.5;
+
+                  return (
+                    <option
+                      key={code}
+                      value={code}
+                      disabled={isExhausted}
+                      className={isExhausted ? 'text-gray-500 bg-gray-800' : ''}
+                    >
+                      {type.name} ({type.code}) — {isHistorical ? 'Historical' : `${effAvail} available`}{isExhausted ? ' (Exhausted)' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Leave Duration (Full Day vs Half Day) */}
+            {leaveCategory && (
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1.5">
+                  Duration
+                </label>
+                {leaveCategory === 'FL' ? (
+                  <div className="text-xs text-gray-300 bg-gray-800/80 px-3 py-2 rounded border border-gray-700">
+                    Full Day (1.0 day) <span className="text-gray-400 text-[11px] ml-1">— Flexi Leave has no half-day option</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {(() => {
+                      const effAvail = getEffectiveAvailable(leaveCategory);
+                      const isFullDisabled = !isHistorical && effAvail < 1.0;
+                      const isHalfDisabled = !isHistorical && effAvail < 0.5;
+
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setLeaveDuration(1.0)}
+                            disabled={isFullDisabled}
+                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                              leaveDuration === 1.0
+                                ? 'bg-amber-600 text-white border-amber-500'
+                                : isFullDisabled
+                                ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
+                                : 'bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-650'
+                            }`}
+                          >
+                            Full Day (1.0)
+                            {isFullDisabled && <span className="block text-[10px] text-red-400">Needs 1.0</span>}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setLeaveDuration(0.5)}
+                            disabled={isHalfDisabled}
+                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                              leaveDuration === 0.5
+                                ? 'bg-amber-600 text-white border-amber-500'
+                                : isHalfDisabled
+                                ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed'
+                                : 'bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-650'
+                            }`}
+                          >
+                            Half Day (0.5)
+                            {isHalfDisabled && <span className="block text-[10px] text-red-400">Needs 0.5</span>}
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Time Input */}
         <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-400 mb-2">
+          <label className="block text-xs font-semibold text-gray-400 mb-2">
             Time (minutes)
           </label>
           <input
@@ -137,10 +262,10 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
             min="0"
             max="1440"
             className={`
-              w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+              w-full px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm
               ${isTimeDisabled() 
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-700 text-white'}
+                ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed border border-gray-700' 
+                : 'bg-gray-700 text-white border border-gray-600'}
             `}
           />
           {!isTimeDisabled() && (
@@ -154,13 +279,7 @@ const DayEditModal = ({ dayData, onSave, onClose }) => {
         <div className="flex gap-3">
           <button
             onClick={handleSave}
-            disabled={isSaveDisabled}
-            className={`
-              flex-1 px-4 py-2 rounded-lg font-semibold transition-colors
-              ${isSaveDisabled
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'}
-            `}
+            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
           >
             Save
           </button>

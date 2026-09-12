@@ -7,6 +7,13 @@ export const getDefaultData = () => ({
   settings: {
     minHoursPerDay: 300,
     minAttendancePercentage: 80,
+    leaveSettings: {
+      asOfDate: new Date().toISOString().split('T')[0],
+      EL: { startingBalance: 0, quarterlyAccrual: 0 },
+      SL: { startingBalance: 0, quarterlyAccrual: 0 },
+      CL: { startingBalance: 0, quarterlyAccrual: 0 },
+      FL: { startingBalance: 0, quarterlyAccrual: 0 }
+    }
   },
   calendarData: {},
 });

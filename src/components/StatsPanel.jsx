@@ -5,14 +5,19 @@ import {
   calculateAvgHoursNeeded,
   calculateDaysCanSkip
 } from '../services/statsService';
+import { calculateLeaveBalances, LEAVE_TYPES } from '../services/leaveService';
 
-const StatsPanel = ({ appData, currentDate }) => {
+const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
   const { calendarData, settings } = appData;
 
   const attendancePercentage = calculateAttendancePercentage(calendarData, settings, currentDate);
   const avgHoursTillYesterday = calculateAvgHoursTillYesterday(calendarData, settings, currentDate);
   const avgHoursNeeded = calculateAvgHoursNeeded(calendarData, settings, currentDate);
   const daysCanSkip = calculateDaysCanSkip(calendarData, settings, currentDate);
+
+  // Calculate dynamic leave balances
+  const leaveBalances = calculateLeaveBalances(settings, calendarData);
+
   // Determine color for attendance percentage
   const getAttendanceColor = () => {
     if (attendancePercentage === 'N/A') return 'text-gray-400';
@@ -32,9 +37,85 @@ const StatsPanel = ({ appData, currentDate }) => {
     return 'text-red-400';
   };
 
+  const hasConfiguredLeaves =
+    settings?.leaveSettings?.EL?.startingBalance > 0 ||
+    settings?.leaveSettings?.SL?.startingBalance > 0 ||
+    settings?.leaveSettings?.CL?.startingBalance > 0 ||
+    settings?.leaveSettings?.FL?.startingBalance > 0 ||
+    settings?.leaveSettings?.EL?.quarterlyAccrual > 0 ||
+    settings?.leaveSettings?.SL?.quarterlyAccrual > 0 ||
+    settings?.leaveSettings?.CL?.quarterlyAccrual > 0 ||
+    settings?.leaveSettings?.FL?.quarterlyAccrual > 0;
+
   return (
     <div className="bg-gray-800 rounded-lg p-4 md:p-6 space-y-4">
-      <h2 className="text-2xl font-bold text-white mb-6">Statistics</h2>
+      <h2 className="text-2xl font-bold text-white mb-4">Statistics</h2>
+
+      {/* Leave Balances Card */}
+      <div className="bg-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-1.5">
+            <span>🏖️</span>
+            <span>Available Leave Balances</span>
+          </h3>
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              className="text-[11px] text-gray-400 hover:text-white transition-colors"
+              title="Configure in Settings"
+            >
+              ⚙️ Config
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5">
+          {Object.keys(LEAVE_TYPES).map((code) => {
+            const type = LEAVE_TYPES[code];
+            const data = leaveBalances[code];
+            const isExhausted = data.available <= 0;
+
+            return (
+              <div
+                key={code}
+                className={`p-2.5 rounded-lg border transition-all ${
+                  isExhausted
+                    ? 'bg-gray-800/80 border-gray-600/40 text-gray-400'
+                    : 'bg-gray-800 border-amber-500/30 shadow-sm'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs font-semibold mb-1">
+                  <span className="text-gray-300">{type.code}</span>
+                  <span className="text-[10px] text-gray-400 font-normal truncate max-w-[80px]">
+                    {type.name.split(' ')[0]}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span
+                    className={`text-xl font-bold ${
+                      isExhausted ? 'text-gray-400' : 'text-amber-400'
+                    }`}
+                  >
+                    {data.available}
+                  </span>
+                  <span className="text-[11px] text-gray-400">days</span>
+                </div>
+                <div className="text-[10px] text-gray-400 mt-1 flex justify-between">
+                  <span>Used: {data.used}</span>
+                  {code === 'CL' && <span title="Lapses March 31">Lapses Mar</span>}
+                  {code === 'FL' && <span title="Lapses Dec 31">Lapses Dec</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {!hasConfiguredLeaves && (
+          <p className="text-[11px] text-gray-400 mt-3 italic text-center">
+            Tip: Set your starting balances and quarterly accruals in Settings.
+          </p>
+        )}
+      </div>
 
       {/* Attendance Percentage */}
       <div className="bg-gray-700 rounded-lg p-4">
@@ -84,14 +165,13 @@ const StatsPanel = ({ appData, currentDate }) => {
       {/* Days Can Skip or Need More SHOW Days - Only show for current month */}
       {daysCanSkip !== null && (
         <div className="bg-gray-700 rounded-lg p-4">
-          
           {daysCanSkip.needShowDays ? (
             <>
               <h3 className="text-sm font-semibold text-gray-400 mb-2">
                 Days You need to come on Weekends
               </h3>
               <p className="text-3xl font-bold text-red-400">
-                 {daysCanSkip.needShowDays} {daysCanSkip.needShowDays === 1 ? 'day' : 'days' }
+                {daysCanSkip.needShowDays} {daysCanSkip.needShowDays === 1 ? 'day' : 'days'}
               </p>
               <p className="text-xs text-gray-400 mt-1">
                 If you go Remaining {daysCanSkip.emptyDaysLeft} day{daysCanSkip.emptyDaysLeft === 1 ? '' : 's'}
@@ -112,7 +192,6 @@ const StatsPanel = ({ appData, currentDate }) => {
           )}
         </div>
       )}
-
     </div>
   );
 };

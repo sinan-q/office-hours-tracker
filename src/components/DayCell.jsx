@@ -50,9 +50,20 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
       return renderTime(time);
     }
     if (status === 'LEAVE') {
+      const isHalfDay = dayData?.leaveDuration === 0.5;
+      const cat = dayData?.leaveCategory;
+      let label = 'Leave';
+      if (cat) {
+        label = isHalfDay ? `${cat} - Half Day` : cat;
+      } else if (isHalfDay) {
+        label = 'Leave (0.5)';
+      }
       return (
-        <div className="text-[9px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate font-medium">
-          Leave
+        <div
+          className="text-[8.5px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-1.5 py-0.5 text-white text-center mt-auto w-full truncate font-medium"
+          title={label}
+        >
+          {label}
         </div>
       );
     }

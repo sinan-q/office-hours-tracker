@@ -43,7 +43,9 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
       date: `${yearStr}-${monthStr}-${dayStr}`,
       status: dayData.status,
       time: dayData.time,
-      originalStatus: dayData.originalStatus
+      originalStatus: dayData.originalStatus,
+      leaveCategory: dayData.leaveCategory,
+      leaveDuration: dayData.leaveDuration
     };
   };
 

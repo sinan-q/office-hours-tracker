@@ -5,6 +5,7 @@ import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
 import DataManager from './components/DataManager';
 import * as storageService from './services/unifiedStorageService';
+import { calculateLeaveBalances } from './services/leaveService';
 import './App.css';
 
 function App() {
@@ -122,10 +123,13 @@ function App() {
           delete newData.calendarData[year];
         }
       } else {
+        const existingEntry = prevData?.calendarData?.[year]?.[month]?.[day];
         newData.calendarData[year][month][day] = {
           status: nextStatus,
           time: nextTime,
-          originalStatus: originalStatus
+          originalStatus: originalStatus,
+          leaveCategory: nextStatus === 'LEAVE' ? existingEntry?.leaveCategory || null : null,
+          leaveDuration: nextStatus === 'LEAVE' ? existingEntry?.leaveDuration || null : null
         };
       }
 
@@ -175,7 +179,9 @@ function App() {
       newData.calendarData[year][month][day] = {
         status: dayData.status,
         time: dayData.time,
-        originalStatus: originalStatus
+        originalStatus: originalStatus,
+        leaveCategory: dayData.status === 'LEAVE' ? dayData.leaveCategory : null,
+        leaveDuration: dayData.status === 'LEAVE' ? dayData.leaveDuration : null
       };
 
       return newData;
@@ -215,7 +221,9 @@ function App() {
       return {
         date: selectedDay,
         status: isWeekend ? 'WEEKEND' : 'EMPTY',
-        time: null
+        time: null,
+        leaveCategory: null,
+        leaveDuration: null
       };
     }
 
@@ -223,7 +231,9 @@ function App() {
       date: selectedDay,
       status: dayData.status,
       time: dayData.time,
-      originalStatus: dayData.originalStatus
+      originalStatus: dayData.originalStatus,
+      leaveCategory: dayData.leaveCategory || null,
+      leaveDuration: dayData.leaveDuration || null
     };
   };
 
@@ -235,6 +245,8 @@ function App() {
       </div>
     );
   }
+
+  const leaveBalances = appData ? calculateLeaveBalances(appData.settings, appData.calendarData) : null;
 
   return (
     <div className="min-h-screen text-white" style={{ background: '#181f2a', boxShadow: 'none', border: 'none', margin: 0, padding: 0 }}>
@@ -272,7 +284,11 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Stats Panel */}
           <div className="lg:col-span-1">
-            <StatsPanel appData={appData} currentDate={currentDate} />
+            <StatsPanel
+              appData={appData}
+              currentDate={currentDate}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
           </div>
 
           {/* Right Column - Calendar */}
@@ -292,6 +308,8 @@ function App() {
       {isModalOpen && (
         <DayEditModal
           dayData={getSelectedDayData()}
+          leaveBalances={leaveBalances}
+          asOfDate={appData.settings?.leaveSettings?.asOfDate}
           onSave={handleSaveDay}
           onClose={() => {
             setIsModalOpen(false);
