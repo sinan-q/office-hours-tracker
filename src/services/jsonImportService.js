@@ -5,7 +5,8 @@
  * - "No Show" -> NO SHOW
  * - "Branch Holiday" -> HOLIDAY
  * - "Weekend" -> WEEKEND
- * - "Leave" / "Exception" -> LEAVE
+ * - "Leave" -> LEAVE
+ * - "Exception" -> EXCEPTION
  * - "At Office" -> SHOW
  * 
  * Override Rule: If dayStatus is "At Office" AND backgroundStatus is not empty,
@@ -18,7 +19,8 @@ const mapStatus = (dayStatus, backgroundStatus) => {
     // Map the background status
     if (backgroundStatus === 'Weekend') return 'WEEKEND';
     if (backgroundStatus === 'Branch Holiday') return 'HOLIDAY';
-    if (backgroundStatus === 'Leave' || backgroundStatus === 'Exception') return 'LEAVE';
+    if (backgroundStatus === 'Leave') return 'LEAVE';
+    if (backgroundStatus === 'Exception') return 'EXCEPTION';
   }
 
   // Normal mapping

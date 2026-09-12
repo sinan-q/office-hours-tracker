@@ -19,8 +19,9 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
       case 'NO SHOW':
         return 'bg-red-500';
       case 'LEAVE':
+        return 'bg-amber-500';
       case 'EXCEPTION':
-        return 'bg-yellow-500';
+        return 'bg-orange-500';
       case 'HOLIDAY':
         return 'bg-blue-500';
       case 'WEEKEND':
@@ -42,6 +43,27 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
         <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}</span>
       </div>
     );
+  };
+
+  const renderBottomContent = () => {
+    if (time && time > 0) {
+      return renderTime(time);
+    }
+    if (status === 'LEAVE') {
+      return (
+        <div className="text-[9px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate font-medium">
+          Leave
+        </div>
+      );
+    }
+    if (status === 'EXCEPTION') {
+      return (
+        <div className="text-[9px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate font-medium">
+          Exception
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -74,8 +96,8 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
         {dayNumber}
       </div>
 
-      {/* Time display at the bottom */}
-      {renderTime(time)}
+      {/* Time or status display at the bottom */}
+      {renderBottomContent()}
     </div>
   );
 };

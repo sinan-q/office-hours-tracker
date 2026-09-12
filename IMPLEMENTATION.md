@@ -36,13 +36,16 @@ src/
 - Color-coded day cells based on status:
   - **Green**: SHOW (attended)
   - **Red**: NO SHOW (absent)
-  - **Yellow**: LEAVE/EXCEPTION
+  - **Amber**: LEAVE
+  - **Orange**: EXCEPTION
   - **Blue**: HOLIDAY
   - **Gray**: WEEKEND
   - **Dark Gray**: EMPTY (not logged)
   - **Purple**: WEEKEND/HOLIDAY with time logged
 - Today's date highlighted with blue ring
 - Time display badge on cells with logged hours
+- Status label badge on LEAVE and EXCEPTION cells
+- Color legend at the bottom of the calendar
 - Click to edit any day
 
 ### 2. Day Edit Modal
@@ -82,7 +85,8 @@ External → Internal:
 - "No Show" → NO SHOW
 - "Branch Holiday" → HOLIDAY
 - "Weekend" → WEEKEND
-- "Leave"/"Exception" → LEAVE
+- "Leave" → LEAVE
+- "Exception" → EXCEPTION
 - "At Office" → SHOW
 - Override: If "At Office" AND backgroundStatus exists, use backgroundStatus
 
