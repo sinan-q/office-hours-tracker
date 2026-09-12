@@ -241,6 +241,107 @@ function App() {
     setSelectedDay(null);
   };
 
+  // Batch action: Fill all upcoming EMPTY weekdays in currently viewed month with SHOW
+  const handleFillRemainingShow = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const yearStr = year.toString();
+    const monthStr = (month + 1).toString().padStart(2, '0');
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    setAppData((prevData) => {
+      const newData = { ...prevData };
+      if (!newData.calendarData) newData.calendarData = {};
+      if (!newData.calendarData[yearStr]) newData.calendarData[yearStr] = {};
+      if (!newData.calendarData[yearStr][monthStr]) newData.calendarData[yearStr][monthStr] = {};
+
+      let modified = false;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayDate = new Date(year, month, day);
+        if (dayDate < today) continue; // Skip past days
+
+        const dayOfWeek = dayDate.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+
+        const dayStr = day.toString().padStart(2, '0');
+        const existingEntry = newData.calendarData[yearStr][monthStr][dayStr];
+
+        // Only fill if there is no entry or entry is currently EMPTY
+        if (!existingEntry || existingEntry.status === 'EMPTY') {
+          newData.calendarData[yearStr][monthStr][dayStr] = {
+            status: 'SHOW',
+            time: 1, // 1 minute (SHOW status)
+            originalStatus: 'EMPTY',
+            leaveCategory: null,
+            leaveDuration: null,
+            originalLeaveCategory: null,
+            originalLeaveDuration: null,
+            exceptionCategory: null,
+            originalExceptionCategory: null,
+            earnedCompOff: false,
+            originalEarnedCompOff: false
+          };
+          modified = true;
+        }
+      }
+
+      return modified ? newData : prevData;
+    });
+  };
+
+  // Batch action: Reverts all upcoming planned days in currently viewed month back to EMPTY
+  const handleResetRemaining = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const yearStr = year.toString();
+    const monthStr = (month + 1).toString().padStart(2, '0');
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    setAppData((prevData) => {
+      if (!prevData?.calendarData?.[yearStr]?.[monthStr]) return prevData;
+
+      const newData = { ...prevData };
+      let modified = false;
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dayDate = new Date(year, month, day);
+        if (dayDate < today) continue; // Skip past days
+
+        const dayStr = day.toString().padStart(2, '0');
+        const entry = newData.calendarData[yearStr]?.[monthStr]?.[dayStr];
+        if (!entry) continue;
+
+        // Only revert planned days that were originally EMPTY (or plain weekend without earnedCompOff)
+        if (entry.originalStatus === 'EMPTY') {
+          delete newData.calendarData[yearStr][monthStr][dayStr];
+          modified = true;
+        } else if (entry.originalStatus === 'WEEKEND' && !entry.earnedCompOff) {
+          delete newData.calendarData[yearStr][monthStr][dayStr];
+          modified = true;
+        }
+      }
+
+      if (modified) {
+        if (Object.keys(newData.calendarData[yearStr][monthStr]).length === 0) {
+          delete newData.calendarData[yearStr][monthStr];
+        }
+        if (Object.keys(newData.calendarData[yearStr]).length === 0) {
+          delete newData.calendarData[yearStr];
+        }
+        return newData;
+      }
+
+      return prevData;
+    });
+  };
+
   // Settings handlers
   const handleSaveSettings = (newSettings) => {
     setAppData((prevData) => ({
@@ -359,6 +460,8 @@ function App() {
               onDayClick={handleDayToggle}
               onNavigate={handleNavigate}
               onDayEdit={handleDayEdit}
+              onFillRemainingShow={handleFillRemainingShow}
+              onResetRemaining={handleResetRemaining}
             />
           </div>
         </div>

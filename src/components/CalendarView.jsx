@@ -35,7 +35,10 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
       return {
         date: `${yearStr}-${monthStr}-${dayStr}`,
         status: isWeekend ? 'WEEKEND' : 'EMPTY',
-        time: null
+        time: null,
+        leaveCategory: null,
+        leaveDuration: null,
+        exceptionCategory: null
       };
     }
 
@@ -91,23 +94,47 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
 
   return (
     <div className="bg-gray-800 rounded-lg p-2 md:p-6">
-      {/* Header with navigation */}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <button
-          onClick={() => onNavigate('prev')}
-          className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base"
-        >
-          ◀
-        </button>
-        <h2 className="text-lg md:text-2xl font-bold text-white">
-          {monthNames[month]} {year}
-        </h2>
-        <button
-          onClick={() => onNavigate('next')}
-          className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base"
-        >
-          ▶
-        </button>
+      {/* Header with navigation & batch actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
+        <div className="flex items-center justify-between sm:justify-start gap-3">
+          <button
+            onClick={() => onNavigate('prev')}
+            className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base transition-colors"
+            title="Previous month"
+          >
+            ◀
+          </button>
+          <h2 className="text-lg md:text-2xl font-bold text-white min-w-[160px] text-center sm:text-left">
+            {monthNames[month]} {year}
+          </h2>
+          <button
+            onClick={() => onNavigate('next')}
+            className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base transition-colors"
+            title="Next month"
+          >
+            ▶
+          </button>
+        </div>
+
+        {/* Quick Month Planning Actions */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onFillRemainingShow}
+            className="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+            title="Sets all upcoming EMPTY weekdays in the month to SHOW"
+          >
+            <span>⚡</span>
+            <span>Fill Remaining as SHOW</span>
+          </button>
+          <button
+            onClick={onResetRemaining}
+            className="flex-1 sm:flex-initial px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white border border-gray-600/60 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-1.5 active:scale-95"
+            title="Reverts all upcoming planned days in the month back to EMPTY"
+          >
+            <span>🔄</span>
+            <span>Reset Remaining</span>
+          </button>
+        </div>
       </div>
 
       {/* Weekday headers */}
