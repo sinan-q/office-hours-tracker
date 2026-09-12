@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import DayCell from './DayCell';
 
 const CalendarView = ({
@@ -13,15 +13,31 @@ const CalendarView = ({
   onFillRemainingShow,
   onResetRemaining
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
 
   // Get first day of month and number of days
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   // Days of the week header
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
   // Month names
   const monthNames = [
@@ -85,7 +101,7 @@ const CalendarView = ({
   // Add empty cells for days before the first of the month
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className="bg-gray-900 min-h-[56px] md:min-h-[80px] rounded-md md:rounded-lg"></div>
+      <div key={`empty-${i}`} className="min-h-[48px] md:min-h-[68px] rounded-lg"></div>
     );
   }
 
@@ -109,90 +125,80 @@ const CalendarView = ({
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-2 md:p-6">
-      {/* Header with navigation & batch actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
-        <div className="flex items-center justify-between sm:justify-start gap-3">
-          <button
-            onClick={() => onNavigate('prev')}
-            className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base transition-colors"
-            title="Previous month"
-          >
-            ◀
-          </button>
-          <h2 className="text-lg md:text-2xl font-bold text-white min-w-[160px] text-center sm:text-left">
-            {monthNames[month]} {year}
-          </h2>
+    <div className="glass-card-strong p-2.5 md:p-5">
+      {/* Header with navigation & overflow menu */}
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <button
+          onClick={() => onNavigate('prev')}
+          className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm md:text-base"
+          title="Previous month"
+        >
+          ◀
+        </button>
+
+        <h2 className="text-base md:text-xl font-bold text-white tracking-tight">
+          {monthNames[month]} {year}
+        </h2>
+
+        <div className="flex items-center gap-1">
           <button
             onClick={() => onNavigate('next')}
-            className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white font-semibold text-sm md:text-base transition-colors"
+            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm md:text-base"
             title="Next month"
           >
             ▶
           </button>
-        </div>
 
-        {/* Quick Month Planning Actions */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onFillRemainingShow}
-            className="flex-1 sm:flex-initial px-3 py-1.5 bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
-            title="Sets all upcoming EMPTY weekdays in the month to SHOW"
-          >
-            <span>⚡</span>
-            <span>Fill Remaining as SHOW</span>
-          </button>
-          <button
-            onClick={onResetRemaining}
-            className="flex-1 sm:flex-initial px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white border border-gray-600/60 rounded-lg text-xs md:text-sm font-medium transition-all flex items-center justify-center gap-1.5 active:scale-95"
-            title="Reverts all upcoming planned days in the month back to EMPTY"
-          >
-            <span>🔄</span>
-            <span>Reset Remaining</span>
-          </button>
+          {/* Overflow menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-bold"
+              title="More options"
+            >
+              ⋮
+            </button>
+
+            {isMenuOpen && (
+              <div className="overflow-menu">
+                <button
+                  onClick={() => {
+                    onFillRemainingShow();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <span className="text-emerald-400">⚡</span>
+                  <span>Fill remaining as Show</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onResetRemaining();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <span className="text-white/50">↺</span>
+                  <span>Reset remaining</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-1 md:mb-2">
-        {weekDays.map((day) => (
-          <div key={day} className="text-center font-semibold text-gray-400 py-1 md:py-2 text-[10px] sm:text-xs md:text-sm">
+      <div className="grid grid-cols-7 gap-1 md:gap-1.5 mb-1">
+        {weekDays.map((day, i) => (
+          <div key={`${day}-${i}`} className={`text-center font-semibold py-1 text-[10px] md:text-xs ${
+            i === 0 || i === 6 ? 'text-white/25' : 'text-white/40'
+          }`}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 md:gap-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-1.5">
         {calendarDays}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-4 pt-3 border-t border-gray-700/60 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-[11px] sm:text-xs text-gray-300">
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-green-500 inline-block shadow-sm"></span>
-          <span>Show</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-red-500 inline-block shadow-sm"></span>
-          <span>No Show</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-amber-500 inline-block shadow-sm"></span>
-          <span>Leave</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-orange-500 inline-block shadow-sm"></span>
-          <span>Exception</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-blue-500 inline-block shadow-sm"></span>
-          <span>Holiday</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-purple-600 inline-block shadow-sm"></span>
-          <span>Worked Off-Day</span>
-        </div>
       </div>
     </div>
   );

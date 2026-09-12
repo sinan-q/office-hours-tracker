@@ -49,10 +49,10 @@ const DataManager = ({ appData, onImport, onClose }) => {
         throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
       }
       
-  await saveData(updatedData);
-  onImport(updatedData);
-  alert('Data imported successfully from file!');
-  onClose();
+      await saveData(updatedData);
+      onImport(updatedData);
+      alert('Data imported successfully from file!');
+      onClose();
     } catch (error) {
       console.error('Error importing JSON:', error);
       alert('Error importing JSON: ' + error.message);
@@ -88,11 +88,11 @@ const DataManager = ({ appData, onImport, onClose }) => {
         throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
       }
       
-  await saveData(updatedData);
-  onImport(updatedData);
-  alert('Data imported successfully from pasted JSON!');
-  setPastedJson('');
-  onClose();
+      await saveData(updatedData);
+      onImport(updatedData);
+      alert('Data imported successfully from pasted JSON!');
+      setPastedJson('');
+      onClose();
     } catch (error) {
       console.error('Error parsing pasted JSON:', error);
       alert('Error parsing JSON: ' + error.message);
@@ -100,33 +100,39 @@ const DataManager = ({ appData, onImport, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-2xl my-8">
-        <h2 className="text-2xl font-bold text-white mb-6">Data Management</h2>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="bg-[#161c24] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-2xl max-h-[92vh] max-h-[92dvh] overflow-y-auto shadow-2xl border border-white/[0.06]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Handle for mobile */}
+        <div className="sm:hidden w-8 h-1 bg-white/10 rounded-full mx-auto mb-3" />
+
+        <h2 className="text-lg font-bold text-white mb-5">Data Management</h2>
 
         <div className="space-y-4">
           {/* Import Section */}
-          <div className="bg-gray-700 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Import Data</h3>
+          <div className="glass-card p-4">
+            <h3 className="text-sm font-semibold text-white/80 mb-4">Import Data</h3>
             
             {/* Import Method Toggle */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-1.5 mb-4">
               <button
                 onClick={() => setImportMethod('paste')}
-                className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
                   importMethod === 'paste'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/25'
+                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:bg-white/[0.05]'
                 }`}
               >
                 Paste JSON
               </button>
               <button
                 onClick={() => setImportMethod('file')}
-                className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
                   importMethod === 'file'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/25'
+                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:bg-white/[0.05]'
                 }`}
               >
                 Upload File
@@ -136,18 +142,18 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* Paste JSON Method */}
             {importMethod === 'paste' && (
               <div>
-                <p className="text-sm text-gray-300 mb-3">
-                  Paste JSON data from your company website (array format with date, dayStatus, backgroundStatus, swipeDtls) or exported app data.
+                <p className="text-[11px] text-white/30 mb-3">
+                  Paste JSON data from your company website (array format) or previously exported app data.
                 </p>
                 <textarea
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
-                  placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","backgroundStatus":"","dayName":"THURSDAY","booking":false,"date":"2025-09-18"}, ...]'
-                  className="w-full px-4 py-3 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm min-h-[150px] resize-y"
+                  placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","date":"2025-09-18"}, ...]'
+                  className="w-full px-3 py-3 bg-white/[0.03] border border-white/[0.06] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-xs min-h-[120px] resize-y placeholder:text-white/15"
                 />
                 <button
                   onClick={handlePasteImport}
-                  className="w-full mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"
+                  className="w-full mt-3 px-4 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 rounded-lg font-semibold transition-all text-sm"
                 >
                   Import from Pasted JSON
                 </button>
@@ -157,12 +163,12 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* File Upload Method */}
             {importMethod === 'file' && (
               <div>
-                <p className="text-sm text-gray-300 mb-4">
+                <p className="text-[11px] text-white/30 mb-4">
                   Import from a JSON file (company format or previously exported app data). This will merge with your existing data.
                 </p>
                 <button
                   onClick={handleImportClick}
-                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"
+                  className="w-full px-4 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 rounded-lg font-semibold transition-all text-sm"
                 >
                   Select JSON File
                 </button>
@@ -178,14 +184,14 @@ const DataManager = ({ appData, onImport, onClose }) => {
           </div>
 
           {/* Export Section */}
-          <div className="bg-gray-700 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-white mb-2">Export Data</h3>
-            <p className="text-sm text-gray-300 mb-4">
+          <div className="glass-card p-4">
+            <h3 className="text-sm font-semibold text-white/80 mb-2">Export Data</h3>
+            <p className="text-[11px] text-white/30 mb-3">
               Download all your calendar data and settings as a JSON file.
             </p>
             <button
               onClick={handleExport}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+              className="w-full px-4 py-2.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/20 rounded-lg font-semibold transition-all text-sm"
             >
               Export to JSON
             </button>
@@ -195,7 +201,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-full mt-6 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
+          className="w-full mt-5 px-4 py-2.5 bg-white/[0.04] hover:bg-white/[0.06] text-white/40 border border-white/[0.06] rounded-lg font-semibold transition-all text-sm"
         >
           Close
         </button>

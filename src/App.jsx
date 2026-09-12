@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import CalendarView from './components/CalendarView';
-import StatsPanel from './components/StatsPanel';
+import { StatsStrip, StatsDrawer } from './components/StatsPanel';
 import ActionDock from './components/ActionDock';
 import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
@@ -19,12 +19,14 @@ function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [paintMode, setPaintMode] = useState({ active: false, chip: null });
-  const [isMobileStatsOpen, setIsMobileStatsOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
+  const [isStatsDrawerOpen, setIsStatsDrawerOpen] = useState(false);
+  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const [storageStatus, setStorageStatus] = useState('online');
+  const headerMenuRef = useRef(null);
 
   // Load data from storage on mount
   useEffect(() => {
@@ -44,6 +46,29 @@ function App() {
       })();
     }
   }, [appData]);
+
+  // Close header menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target)) {
+        setIsHeaderMenuOpen(false);
+      }
+    };
+    if (isHeaderMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isHeaderMenuOpen]);
+
+  // Toggle body scroll when drawer is open
+  useEffect(() => {
+    if (isStatsDrawerOpen) {
+      document.body.classList.add('drawer-open');
+    } else {
+      document.body.classList.remove('drawer-open');
+    }
+    return () => document.body.classList.remove('drawer-open');
+  }, [isStatsDrawerOpen]);
 
   // Navigation handlers
   const handleNavigate = (direction) => {
@@ -559,8 +584,8 @@ function App() {
   // Don't render until data is loaded
   if (!appData) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white/40 text-sm font-medium">Loading…</div>
       </div>
     );
   }
@@ -568,122 +593,122 @@ function App() {
   const leaveBalances = appData ? calculateLeaveBalances(appData.settings, appData.calendarData) : {};
   const exceptionStats = appData ? calculateExceptionStats(appData.calendarData, selectedDate || currentDate) : {};
   const compOffBalances = appData ? calculateCompOffBalances(appData.settings?.compOffSettings, appData.calendarData) : {};
-  const attendancePercentage = appData ? calculateAttendancePercentage(appData.calendarData, appData.settings, currentDate) : 'N/A';
 
   return (
-    <div className="min-h-screen text-white" style={{ background: '#181f2a', boxShadow: 'none', border: 'none', margin: 0, padding: 0 }}>
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Office Hours Tracker</h1>
-              <p className="text-gray-400 text-xs md:text-sm mt-1">Track attendance and manage leaves</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 md:gap-3">
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${storageStatus === 'online'
-                ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                : 'bg-orange-500/10 border-orange-500/30 text-orange-400'
-                }`}>
-                <div className={`w-2 h-2 rounded-full ${storageStatus === 'online' ? 'bg-green-400' : 'bg-orange-400'
-                  }`} />
-                {storageStatus === 'online' ? 'Online' : 'Local Mode'}
+    <div className="min-h-screen min-h-[100dvh] text-white">
+      {/* Compact Header */}
+      <header className="px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-base md:text-lg font-bold text-white tracking-tight">
+            Office Hours
+          </h1>
+          <span
+            className={`status-dot ${storageStatus === 'online' ? 'status-dot--online' : 'status-dot--local'}`}
+            title={storageStatus === 'online' ? 'Synced to cloud' : 'Local mode – not synced'}
+          />
+        </div>
+
+        <div className="flex items-center gap-1" ref={headerMenuRef}>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all text-sm"
+            title="Settings"
+          >
+            ⚙
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setIsHeaderMenuOpen(!isHeaderMenuOpen)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all text-sm font-bold"
+              title="More options"
+            >
+              ⋮
+            </button>
+
+            {isHeaderMenuOpen && (
+              <div className="overflow-menu" style={{ right: 0 }}>
+                <button onClick={() => {
+                  setIsDataManagerOpen(true);
+                  setIsHeaderMenuOpen(false);
+                }}>
+                  <span className="text-blue-400">↕</span>
+                  <span>Import / Export</span>
+                </button>
               </div>
-              <button
-                onClick={() => setIsDataManagerOpen(true)}
-                className="px-3 md:px-4 py-1.5 md:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs md:text-sm font-semibold transition-colors"
-              >
-                Import/Export
-              </button>
-              <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs md:text-sm font-semibold transition-colors"
-              >
-                Settings
-              </button>
-            </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-2 md:px-4 py-3 md:py-6 pb-24 md:pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Stats Panel (Hidden on small screens by default, expandable) */}
-          <div className="hidden lg:block lg:col-span-1">
-            <StatsPanel
-              appData={appData}
-              currentDate={currentDate}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-            />
-          </div>
+      <main className="px-3 md:px-4 pb-4 main-content-with-dock space-y-2.5">
+        {/* Stats Strip (always visible) */}
+        <StatsStrip
+          appData={appData}
+          currentDate={currentDate}
+          onOpenDrawer={() => setIsStatsDrawerOpen(true)}
+        />
 
-          {/* Right Column - Calendar & Action Dock */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Mobile Top Stats Bar (< lg screens) */}
-            <div className="block lg:hidden bg-gray-800/90 border border-gray-700/80 rounded-xl p-2.5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="font-bold text-white">
-                    📊 {attendancePercentage === 'N/A' ? 'N/A' : `${attendancePercentage}%`}
-                  </span>
-                  <span className="text-gray-400">·</span>
-                  <span className="text-orange-300 font-medium">
-                    WFH: {exceptionStats?.available ?? 0}
-                  </span>
-                  <span className="text-gray-400">·</span>
-                  <span className="text-emerald-300 font-medium">
-                    CO: {compOffBalances?.available ?? 0}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setIsMobileStatsOpen(!isMobileStatsOpen)}
-                  className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20"
-                >
-                  {isMobileStatsOpen ? 'Hide Stats ▲' : 'All Stats ▼'}
-                </button>
-              </div>
+        {/* Calendar */}
+        <CalendarView
+          currentDate={currentDate}
+          calendarData={appData.calendarData}
+          selectedDate={selectedDate}
+          paintMode={paintMode}
+          onSelectDay={handleSelectDay}
+          onDayClick={handleSelectDay}
+          onNavigate={handleNavigate}
+          onDayEdit={handleOpenDetailedEdit}
+          onFillRemainingShow={handleFillRemainingShow}
+          onResetRemaining={handleResetRemaining}
+        />
 
-              {isMobileStatsOpen && (
-                <div className="mt-3 pt-3 border-t border-gray-700">
-                  <StatsPanel
-                    appData={appData}
-                    currentDate={currentDate}
-                    onOpenSettings={() => setIsSettingsOpen(true)}
-                  />
-                </div>
-              )}
-            </div>
-
-            <CalendarView
-              currentDate={currentDate}
-              calendarData={appData.calendarData}
-              selectedDate={selectedDate}
-              paintMode={paintMode}
-              onSelectDay={handleSelectDay}
-              onDayClick={handleSelectDay}
-              onNavigate={handleNavigate}
-              onDayEdit={handleOpenDetailedEdit}
-              onFillRemainingShow={handleFillRemainingShow}
-              onResetRemaining={handleResetRemaining}
-            />
-
-            {/* Thumb-Zone Action Dock */}
-            <ActionDock
-              selectedDate={selectedDate}
-              selectedDayData={getSelectedDayDataForDock()}
-              leaveBalances={leaveBalances}
-              exceptionStats={exceptionStats}
-              compOffBalances={compOffBalances}
-              paintMode={paintMode}
-              onApplyChip={handleApplyChip}
-              onActivatePaintMode={handleActivatePaintMode}
-              onExitPaintMode={handleExitPaintMode}
-              onOpenDetailedEdit={handleOpenDetailedEdit}
-            />
-          </div>
+        {/* Desktop Action Dock (inline, visible naturally) */}
+        <div className="hidden lg:block glass-card-strong">
+          <ActionDock
+            selectedDate={selectedDate}
+            selectedDayData={getSelectedDayDataForDock()}
+            leaveBalances={leaveBalances}
+            exceptionStats={exceptionStats}
+            compOffBalances={compOffBalances}
+            paintMode={paintMode}
+            onApplyChip={handleApplyChip}
+            onActivatePaintMode={handleActivatePaintMode}
+            onExitPaintMode={handleExitPaintMode}
+            onOpenDetailedEdit={handleOpenDetailedEdit}
+          />
         </div>
       </main>
+
+      {/* Mobile Fixed Action Dock (< lg screens) */}
+      <div className="lg:hidden dock-fixed">
+        <ActionDock
+          selectedDate={selectedDate}
+          selectedDayData={getSelectedDayDataForDock()}
+          leaveBalances={leaveBalances}
+          exceptionStats={exceptionStats}
+          compOffBalances={compOffBalances}
+          paintMode={paintMode}
+          onApplyChip={handleApplyChip}
+          onActivatePaintMode={handleActivatePaintMode}
+          onExitPaintMode={handleExitPaintMode}
+          onOpenDetailedEdit={handleOpenDetailedEdit}
+        />
+      </div>
+
+      {/* Stats Drawer */}
+      {isStatsDrawerOpen && (
+        <StatsDrawer
+          appData={appData}
+          currentDate={currentDate}
+          onClose={() => setIsStatsDrawerOpen(false)}
+          onOpenSettings={() => {
+            setIsStatsDrawerOpen(false);
+            setIsSettingsOpen(true);
+          }}
+        />
+      )}
 
       {/* Modals */}
       {isModalOpen && (

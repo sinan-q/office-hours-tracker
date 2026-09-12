@@ -38,27 +38,27 @@ const ActionDock = ({
 
   // Get human-readable badge for the day's current status
   const getCurrentStatusBadge = () => {
-    if (!selectedDayData) return { label: 'Empty', color: 'bg-gray-700 text-gray-300' };
+    if (!selectedDayData) return { label: 'Empty', color: 'bg-white/[0.06] text-white/40' };
     const { status, leaveCategory, leaveDuration, exceptionCategory, earnedCompOff } = selectedDayData;
 
-    if (status === 'SHOW') return { label: 'Office (SHOW)', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
-    if (status === 'NO SHOW') return { label: 'No Show', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
+    if (status === 'SHOW') return { label: 'Office', color: 'bg-emerald-500/20 text-emerald-400' };
+    if (status === 'NO SHOW') return { label: 'No Show', color: 'bg-red-500/20 text-red-400' };
     if (status === 'LEAVE') {
-      const dur = leaveDuration === 0.5 ? ' (0.5)' : '';
-      return { label: `${leaveCategory || 'Leave'}${dur}`, color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' };
+      const dur = leaveDuration === 0.5 ? ' ½' : '';
+      return { label: `${leaveCategory || 'Leave'}${dur}`, color: 'bg-amber-500/20 text-amber-400' };
     }
     if (status === 'EXCEPTION') {
-      if (exceptionCategory === 'PE') return { label: 'WFH', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
-      if (exceptionCategory === 'COMP_OFF') return { label: 'Comp Off', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' };
-      return { label: 'Other', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
+      if (exceptionCategory === 'PE') return { label: 'WFH', color: 'bg-orange-500/20 text-orange-400' };
+      if (exceptionCategory === 'COMP_OFF') return { label: 'Comp Off', color: 'bg-emerald-500/20 text-emerald-400' };
+      return { label: 'Other', color: 'bg-orange-500/20 text-orange-400' };
     }
     if (status === 'HOLIDAY') {
-      return { label: earnedCompOff ? 'Holiday (CO)' : 'Holiday', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' };
+      return { label: earnedCompOff ? 'Holiday CO' : 'Holiday', color: 'bg-blue-500/20 text-blue-400' };
     }
     if (status === 'WEEKEND') {
-      return { label: earnedCompOff ? 'Weekend (CO)' : 'Weekend', color: 'bg-gray-700/60 text-gray-300 border-gray-600/40' };
+      return { label: earnedCompOff ? 'Weekend CO' : 'Weekend', color: 'bg-white/[0.06] text-white/40' };
     }
-    return { label: 'Empty', color: 'bg-gray-800 text-gray-400 border-gray-700' };
+    return { label: 'Empty', color: 'bg-white/[0.06] text-white/40' };
   };
 
   // Handle pointer down for long press (Paint Mode)
@@ -103,9 +103,9 @@ const ActionDock = ({
       id: 'SHOW',
       type: 'SHOW',
       label: 'Office',
-      icon: '🏢',
-      color: 'bg-green-600/20 border-green-500/40 text-green-300 hover:bg-green-600/30',
-      activeColor: 'bg-green-600 text-white border-green-400 shadow-green-500/30',
+      accent: 'emerald',
+      color: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25',
+      activeColor: 'bg-emerald-500 text-white border-emerald-400',
       disabled: false,
       badge: null
     },
@@ -114,9 +114,9 @@ const ActionDock = ({
       type: 'EXCEPTION',
       exceptionCategory: 'PE',
       label: 'WFH',
-      icon: '🏠',
-      color: 'bg-orange-600/20 border-orange-500/40 text-orange-300 hover:bg-orange-600/30',
-      activeColor: 'bg-orange-600 text-white border-orange-400 shadow-orange-500/30',
+      accent: 'orange',
+      color: 'bg-orange-500/15 border-orange-500/25 text-orange-400 hover:bg-orange-500/25',
+      activeColor: 'bg-orange-500 text-white border-orange-400',
       disabled: (exceptionStats?.available ?? 0) <= 0,
       badge: `${exceptionStats?.available ?? 0}`
     },
@@ -125,9 +125,9 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'EL',
       label: 'EL',
-      icon: '🏖️',
-      color: 'bg-amber-600/20 border-amber-500/40 text-amber-300 hover:bg-amber-600/30',
-      activeColor: 'bg-amber-600 text-white border-amber-400 shadow-amber-500/30',
+      accent: 'amber',
+      color: 'bg-amber-500/15 border-amber-500/25 text-amber-400 hover:bg-amber-500/25',
+      activeColor: 'bg-amber-500 text-white border-amber-400',
       disabled: (leaveBalances?.EL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.EL?.available ?? 0}`
     },
@@ -136,9 +136,9 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'SL',
       label: 'SL',
-      icon: '🤒',
-      color: 'bg-yellow-600/20 border-yellow-500/40 text-yellow-300 hover:bg-yellow-600/30',
-      activeColor: 'bg-yellow-600 text-white border-yellow-400 shadow-yellow-500/30',
+      accent: 'yellow',
+      color: 'bg-yellow-500/15 border-yellow-500/25 text-yellow-300 hover:bg-yellow-500/25',
+      activeColor: 'bg-yellow-500 text-white border-yellow-400',
       disabled: (leaveBalances?.SL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.SL?.available ?? 0}`
     },
@@ -147,9 +147,9 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'CL',
       label: 'CL',
-      icon: '☕',
-      color: 'bg-rose-600/20 border-rose-500/40 text-rose-300 hover:bg-rose-600/30',
-      activeColor: 'bg-rose-600 text-white border-rose-400 shadow-rose-500/30',
+      accent: 'rose',
+      color: 'bg-rose-500/15 border-rose-500/25 text-rose-400 hover:bg-rose-500/25',
+      activeColor: 'bg-rose-500 text-white border-rose-400',
       disabled: (leaveBalances?.CL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.CL?.available ?? 0}`
     },
@@ -158,9 +158,9 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'FL',
       label: 'FL',
-      icon: '🌴',
-      color: 'bg-teal-600/20 border-teal-500/40 text-teal-300 hover:bg-teal-600/30',
-      activeColor: 'bg-teal-600 text-white border-teal-400 shadow-teal-500/30',
+      accent: 'teal',
+      color: 'bg-teal-500/15 border-teal-500/25 text-teal-400 hover:bg-teal-500/25',
+      activeColor: 'bg-teal-500 text-white border-teal-400',
       disabled: (leaveBalances?.FL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.FL?.available ?? 0}`
     },
@@ -168,20 +168,20 @@ const ActionDock = ({
       id: 'COMP_OFF',
       type: 'EXCEPTION',
       exceptionCategory: 'COMP_OFF',
-      label: 'Comp Off',
-      icon: '🎁',
-      color: 'bg-emerald-600/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-600/30',
-      activeColor: 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/30',
+      label: 'CO',
+      accent: 'emerald',
+      color: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25',
+      activeColor: 'bg-emerald-500 text-white border-emerald-400',
       disabled: (compOffBalances?.available ?? 0) <= 0,
       badge: `${compOffBalances?.available ?? 0}`
     },
     {
       id: 'NO_SHOW',
       type: 'NO SHOW',
-      label: 'No Show',
-      icon: '🚫',
-      color: 'bg-red-600/20 border-red-500/40 text-red-300 hover:bg-red-600/30',
-      activeColor: 'bg-red-600 text-white border-red-400 shadow-red-500/30',
+      label: 'Off',
+      accent: 'red',
+      color: 'bg-red-500/15 border-red-500/25 text-red-400 hover:bg-red-500/25',
+      activeColor: 'bg-red-500 text-white border-red-400',
       disabled: false,
       badge: null
     },
@@ -189,9 +189,9 @@ const ActionDock = ({
       id: 'CLEAR',
       type: 'CLEAR',
       label: 'Clear',
-      icon: '✖',
-      color: 'bg-gray-700/60 border-gray-600/40 text-gray-300 hover:bg-gray-700',
-      activeColor: 'bg-gray-600 text-white border-gray-400',
+      accent: 'gray',
+      color: 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]',
+      activeColor: 'bg-white/20 text-white border-white/30',
       disabled: false,
       badge: null
     }
@@ -200,54 +200,48 @@ const ActionDock = ({
   const currentBadge = getCurrentStatusBadge();
 
   return (
-    <div className="w-full bg-gray-900/95 backdrop-blur-md border border-gray-700/80 rounded-2xl shadow-2xl p-3 md:p-4 transition-all">
+    <div className="w-full p-2.5 md:p-3 transition-all">
       {/* Top Header Row: Selected Date + Current Status OR Paint Mode Banner */}
       {paintMode?.active ? (
-        <div className="flex items-center justify-between bg-indigo-950/50 border border-indigo-500/40 rounded-xl px-3 py-2 mb-2.5 animate-pulse">
+        <div className="flex items-center justify-between bg-indigo-500/10 border border-indigo-500/25 rounded-lg px-3 py-2 mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-base">🖌️</span>
-            <div>
-              <span className="text-xs md:text-sm font-semibold text-indigo-300">
-                Paint Mode Active: <strong className="text-white">{paintMode.chip?.label}</strong>
-              </span>
-              <p className="text-[10px] text-indigo-300/70">
-                Tap any calendar dates to apply immediately
-              </p>
-            </div>
+            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+            <span className="text-xs font-semibold text-indigo-300">
+              Paint: <strong className="text-white">{paintMode.chip?.label}</strong>
+            </span>
+            <span className="text-[10px] text-indigo-300/60 hidden sm:inline">
+              — tap calendar days to apply
+            </span>
           </div>
           <button
             onClick={onExitPaintMode}
-            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow transition-colors flex items-center gap-1"
+            className="px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-[11px] font-semibold rounded-md transition-colors"
           >
-            <span>Done</span>
-            <span>✕</span>
+            Done
           </button>
         </div>
       ) : (
-        <div className="flex items-center justify-between mb-2.5 px-0.5">
+        <div className="flex items-center justify-between mb-2 px-0.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-200">
-              📅 {formatDateDisplay(selectedDate)}
+            <span className="text-xs font-semibold text-white/70">
+              {formatDateDisplay(selectedDate)}
             </span>
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${currentBadge.color}`}>
+            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${currentBadge.color}`}>
               {currentBadge.label}
             </span>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onOpenDetailedEdit(selectedDate)}
-              className="text-[11px] font-medium text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-              title="Open full editor for hours, half-day, or comp off"
-            >
-              <span>✏️ More...</span>
-            </button>
-          </div>
+          <button
+            onClick={() => onOpenDetailedEdit(selectedDate)}
+            className="text-[11px] font-medium text-white/30 hover:text-white/60 transition-colors"
+            title="Open full editor (or double-tap a day)"
+          >
+            Edit →
+          </button>
         </div>
       )}
 
-      {/* Action Chips Grid: 1-tap apply, long-press to paint */}
-      <div className="grid grid-cols-5 sm:grid-cols-9 gap-1.5 md:gap-2">
+      {/* Action Chips Grid */}
+      <div className="flex flex-wrap gap-1 md:gap-1.5 justify-center">
         {chips.map((chip) => {
           const isCurrentActive = paintMode?.active && paintMode?.chip?.id === chip.id;
 
@@ -260,28 +254,25 @@ const ActionDock = ({
               onPointerLeave={() => handlePointerUp(chip)}
               disabled={chip.disabled}
               className={`
-                relative flex flex-col items-center justify-center p-1.5 md:p-2 rounded-xl border text-center transition-all select-none
+                relative flex items-center gap-1 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg border text-center transition-all duration-150 select-none
                 ${chip.disabled
-                  ? 'opacity-35 bg-gray-800/40 border-gray-700/30 text-gray-500 cursor-not-allowed'
+                  ? 'opacity-30 bg-white/[0.02] border-white/[0.04] text-white/30 cursor-not-allowed'
                   : isCurrentActive
-                  ? `${chip.activeColor} ring-2 ring-indigo-400 shadow-md scale-105`
+                  ? `${chip.activeColor} ring-1 ring-indigo-400 shadow-sm scale-105`
                   : `${chip.color} active:scale-95`}
               `}
               title={
                 chip.disabled
-                  ? `${chip.label} (Exhausted / 0 left)`
-                  : `Tap: Apply to ${formatDateDisplay(selectedDate)} · Hold: Paint Mode`
+                  ? `${chip.label} (0 left)`
+                  : `Tap to apply · Hold for paint mode`
               }
             >
-              <span className="text-sm md:text-base leading-none mb-1">
-                {chip.icon}
-              </span>
-              <span className="text-[10px] md:text-xs font-semibold truncate w-full leading-tight">
+              <span className="text-[11px] md:text-xs font-semibold leading-none">
                 {chip.label}
               </span>
               {chip.badge !== null && (
-                <span className={`text-[9px] font-bold px-1 rounded-full mt-0.5 ${
-                  chip.disabled ? 'bg-red-950/60 text-red-400' : 'bg-black/40 text-gray-300'
+                <span className={`text-[9px] md:text-[10px] font-bold leading-none ${
+                  chip.disabled ? 'text-red-400/60' : 'opacity-60'
                 }`}>
                   {chip.badge}
                 </span>
@@ -290,11 +281,6 @@ const ActionDock = ({
           );
         })}
       </div>
-
-      {/* Helper text */}
-      <p className="text-[9.5px] text-gray-400 text-center mt-2 font-medium">
-        💡 Tap a date $\rightarrow$ tap chip to apply &nbsp;·&nbsp; <strong>Long-press any chip</strong> for Paint Mode
-      </p>
     </div>
   );
 };

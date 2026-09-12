@@ -1,34 +1,59 @@
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 
 const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, onClick, onEdit = () => {} }) => {
   const { date, status, time } = dayData;
-  
+  const lastTapTime = useRef(0);
+  const tapTimeout = useRef(null);
+
   // Extract day number from date
   const dayNumber = date ? new Date(date).getDate() : '';
+
+  // Double-tap handler: first tap selects, second tap on already-selected day opens edit
+  const handleClick = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapTime.current;
+
+    if (isPaintMode) {
+      // In paint mode, just forward the click immediately
+      onClick();
+      return;
+    }
+
+    if (isSelected && timeSinceLastTap < 400) {
+      // Double-tap on the already-selected day → open editor
+      clearTimeout(tapTimeout.current);
+      onEdit();
+    } else {
+      // Single tap → select the day
+      onClick();
+    }
+
+    lastTapTime.current = now;
+  }, [isSelected, isPaintMode, onClick, onEdit]);
 
   // Determine background color based on status
   const getBackgroundColor = () => {
     // Special case: WEEKEND or HOLIDAY with time logged
     if ((status === 'WEEKEND' || status === 'HOLIDAY') && time && time > 0) {
-      return 'bg-purple-600';
+      return 'bg-purple-500/80';
     }
 
     switch (status) {
       case 'SHOW':
-        return 'bg-green-500';
+        return 'bg-emerald-500/80';
       case 'NO SHOW':
-        return 'bg-red-500';
+        return 'bg-red-400/70';
       case 'LEAVE':
-        return 'bg-amber-500';
+        return 'bg-amber-500/75';
       case 'EXCEPTION':
-        return 'bg-orange-500';
+        return 'bg-orange-500/75';
       case 'HOLIDAY':
-        return 'bg-blue-500';
+        return 'bg-blue-500/70';
       case 'WEEKEND':
-        return 'bg-gray-700';
+        return 'bg-white/[0.04]';
       case 'EMPTY':
       default:
-        return 'bg-gray-800';
+        return 'bg-white/[0.03]';
     }
   };
 
@@ -37,9 +62,9 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     if (!minutes || minutes === 0) return null;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    const suffix = dayData?.earnedCompOff ? ' (CO)' : '';
+    const suffix = dayData?.earnedCompOff ? ' CO' : '';
     return (
-      <div className="text-[10px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate">
+      <div className="text-[9px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight">
         <span className="hidden md:inline">{hours}h {mins}m{suffix}</span>
         <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}{suffix}</span>
       </div>
@@ -53,20 +78,20 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     if (status === 'HOLIDAY' && dayData?.earnedCompOff) {
       return (
         <div
-          className="text-[8.5px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-1.5 py-0.5 text-white text-center mt-auto w-full truncate font-medium"
+          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
           title="Holiday (Earned Comp Off)"
         >
-          Holiday (CO)
+          Holiday CO
         </div>
       );
     }
     if (status === 'WEEKEND' && dayData?.earnedCompOff) {
       return (
         <div
-          className="text-[8.5px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-1.5 py-0.5 text-white text-center mt-auto w-full truncate font-medium"
+          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
           title="Weekend (Earned Comp Off)"
         >
-          Weekend (CO)
+          Wknd CO
         </div>
       );
     }
@@ -75,13 +100,13 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
       const cat = dayData?.leaveCategory;
       let label = 'Leave';
       if (cat) {
-        label = isHalfDay ? `${cat} - Half Day` : cat;
+        label = isHalfDay ? `${cat} ½` : cat;
       } else if (isHalfDay) {
-        label = 'Leave (0.5)';
+        label = 'Leave ½';
       }
       return (
         <div
-          className="text-[8.5px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-1.5 py-0.5 text-white text-center mt-auto w-full truncate font-medium"
+          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
           title={label}
         >
           {label}
@@ -100,7 +125,7 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
       }
       return (
         <div
-          className="text-[9px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate font-medium"
+          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
           title={excCat === 'PE' ? 'Personal Exigency (WFH)' : (excCat === 'COMP_OFF' ? 'Comp Off' : (excCat === 'OTHER' ? 'Other Exception' : 'Exception'))}
         >
           {label}
@@ -112,32 +137,23 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
 
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className={`
         ${getBackgroundColor()}
-        ${isSelected ? 'ring-2 md:ring-3 ring-indigo-400 ring-offset-2 ring-offset-gray-900 shadow-xl scale-[1.03] z-10' : (isToday ? 'ring-2 md:ring-3 ring-blue-400/80' : '')}
-        ${isPaintMode ? 'cursor-crosshair hover:scale-105 active:scale-95' : 'cursor-pointer hover:opacity-95'}
-        p-1 md:p-2 min-h-[50px] md:min-h-[76px] rounded-md md:rounded-lg
-        transition-all select-none
+        ${isSelected
+          ? 'ring-2 ring-blue-400 ring-offset-1 ring-offset-[#0f1419] shadow-lg shadow-blue-500/10 scale-[1.04] z-10'
+          : (isToday ? 'ring-1.5 ring-white/30' : '')}
+        ${isPaintMode ? 'cursor-crosshair hover:scale-105 active:scale-95' : 'cursor-pointer hover:brightness-110 active:scale-[0.97]'}
+        p-1 md:p-1.5 min-h-[48px] md:min-h-[68px] rounded-lg
+        transition-all duration-150 select-none
         flex flex-col justify-between
         relative
-        group
       `}
     >
-      {/* Edit button absolute-positioned to save space */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit();
-        }}
-        className="absolute top-0.5 left-0.5 text-[10px] md:text-xs text-gray-400 hover:text-white bg-black bg-opacity-20 hover:bg-opacity-40 rounded p-0.5 md:p-1 transition-opacity md:opacity-0 md:group-hover:opacity-100 opacity-60"
-        title="Edit day details"
-      >
-        ✏️
-      </button>
-
       {/* Day number at the top right */}
-      <div className="text-right font-semibold text-xs md:text-base text-white w-full pr-0.5 pt-0.5">
+      <div className={`text-right font-semibold text-[11px] md:text-sm leading-none pr-0.5 ${
+        status === 'EMPTY' || status === 'WEEKEND' ? 'text-white/40' : 'text-white/90'
+      }`}>
         {dayNumber}
       </div>
 
