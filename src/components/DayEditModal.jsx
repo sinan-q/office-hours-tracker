@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { LEAVE_TYPES } from '../services/leaveService';
+import { calculateExceptionStats, canSelectPersonalExigency, EXCEPTION_TYPES } from '../services/exceptionService';
 
-const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => {
+const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, onClose }) => {
   const [status, setStatus] = useState(dayData?.status || 'EMPTY');
   const [time, setTime] = useState(dayData?.time || 0);
   const [leaveCategory, setLeaveCategory] = useState(dayData?.leaveCategory || '');
   const [leaveDuration, setLeaveDuration] = useState(dayData?.leaveDuration ?? 1.0);
+
+  // Exception category state ('PE' or 'OTHER')
+  const excStats = calculateExceptionStats(calendarData, dayData?.date);
+  const canSelectPE = canSelectPersonalExigency(calendarData, dayData?.date, dayData);
+  const [exceptionCategory, setExceptionCategory] = useState(dayData?.exceptionCategory || (canSelectPE ? 'PE' : 'OTHER'));
 
   useEffect(() => {
     if (dayData) {
@@ -13,6 +19,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
       setTime(dayData.time || 0);
       setLeaveCategory(dayData.leaveCategory || '');
       setLeaveDuration(dayData.leaveDuration ?? 1.0);
+      setExceptionCategory(dayData.exceptionCategory || (canSelectPE ? 'PE' : 'OTHER'));
     }
   }, [dayData]);
 
@@ -39,7 +46,8 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
       status,
       time: timeValue,
       leaveCategory: status === 'LEAVE' ? (leaveCategory || null) : null,
-      leaveDuration: status === 'LEAVE' ? (leaveCategory === 'FL' ? 1.0 : parseFloat(leaveDuration) || 1.0) : null
+      leaveDuration: status === 'LEAVE' ? (leaveCategory === 'FL' ? 1.0 : parseFloat(leaveDuration) || 1.0) : null,
+      exceptionCategory: status === 'EXCEPTION' ? (exceptionCategory || 'PE') : null
     });
   };
 
@@ -50,6 +58,9 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
     // Clear time if switching to a status that doesn't allow time
     if (newStatus === 'NO SHOW' || newStatus === 'LEAVE' || newStatus === 'EXCEPTION') {
       setTime(0);
+    }
+    if (newStatus === 'EXCEPTION' && !exceptionCategory) {
+      setExceptionCategory(canSelectPE ? 'PE' : 'OTHER');
     }
   };
 
@@ -78,6 +89,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
     setTime(0);
     setLeaveCategory('');
     setLeaveDuration(1.0);
+    setExceptionCategory('PE');
   };
 
   // Handle add status button - show dropdown by setting a default status
@@ -246,6 +258,52 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
                   </div>
                 )}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Exception Details (when status is EXCEPTION) */}
+        {status === 'EXCEPTION' && (
+          <div className="mb-5 bg-orange-950/20 border border-orange-500/30 p-3.5 rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
+                Exception Details
+              </h3>
+              <span className="text-[11px] text-orange-300 font-medium">
+                {excStats.quarterCode}: {excStats.available} / {excStats.quota} WFH left
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-300 mb-1">
+                Exception Category
+              </label>
+              <select
+                value={exceptionCategory}
+                onChange={(e) => setExceptionCategory(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+              >
+                <option
+                  value="PE"
+                  disabled={!canSelectPE}
+                  className={!canSelectPE ? 'text-gray-500 bg-gray-800' : ''}
+                >
+                  Personal Exigency (WFH) — {excStats.available} / {excStats.quota} left in {excStats.quarterCode}{!canSelectPE ? ' (Exhausted)' : ''}
+                </option>
+                <option value="OTHER">
+                  Other Exception (Uncapped / Special Approval)
+                </option>
+              </select>
+            </div>
+
+            {exceptionCategory === 'PE' ? (
+              <p className="text-[11px] text-orange-300/80">
+                🏷️ Displays as <strong>WFH</strong> on the calendar cell. Quota: 4 per quarter (no carry forward).
+              </p>
+            ) : (
+              <p className="text-[11px] text-gray-400">
+                🏷️ Displays as <strong>Other</strong> on the calendar cell. Uncapped special exception.
+              </p>
             )}
           </div>
         )}

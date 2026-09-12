@@ -127,7 +127,7 @@ export const processImportedJson = (jsonData, existingData) => {
       originalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
     }
 
-    // Check existing entry to preserve user-assigned leave categorization if day is LEAVE
+    // Check existing entry to preserve user-assigned leave and exception categorization
     const existingEntry = existingData?.calendarData?.[year]?.[month]?.[day];
     let leaveCategory = null;
     let leaveDuration = null;
@@ -141,6 +141,14 @@ export const processImportedJson = (jsonData, existingData) => {
       originalLeaveDuration = leaveDuration;
     }
 
+    let exceptionCategory = null;
+    let originalExceptionCategory = existingEntry?.originalExceptionCategory || null;
+
+    if (internalStatus === 'EXCEPTION') {
+      exceptionCategory = existingEntry?.exceptionCategory || existingEntry?.originalExceptionCategory || null;
+      originalExceptionCategory = exceptionCategory;
+    }
+
     // Set the day data
     newCalendarData[year][month][day] = {
       status: internalStatus,
@@ -150,6 +158,8 @@ export const processImportedJson = (jsonData, existingData) => {
       leaveDuration: leaveDuration,
       originalLeaveCategory: originalLeaveCategory,
       originalLeaveDuration: originalLeaveDuration,
+      exceptionCategory: exceptionCategory,
+      originalExceptionCategory: originalExceptionCategory,
     };
   });
 

@@ -126,6 +126,7 @@ function App() {
         const existingEntry = prevData?.calendarData?.[year]?.[month]?.[day];
         const origLeaveCategory = existingEntry?.originalLeaveCategory || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveCategory : null);
         const origLeaveDuration = existingEntry?.originalLeaveDuration || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveDuration : null);
+        const origExceptionCategory = existingEntry?.originalExceptionCategory || (existingEntry?.status === 'EXCEPTION' ? existingEntry.exceptionCategory : null);
 
         newData.calendarData[year][month][day] = {
           status: nextStatus,
@@ -134,7 +135,9 @@ function App() {
           leaveCategory: nextStatus === 'LEAVE' ? origLeaveCategory : null,
           leaveDuration: nextStatus === 'LEAVE' ? origLeaveDuration : null,
           originalLeaveCategory: origLeaveCategory,
-          originalLeaveDuration: origLeaveDuration
+          originalLeaveDuration: origLeaveDuration,
+          exceptionCategory: nextStatus === 'EXCEPTION' ? origExceptionCategory : null,
+          originalExceptionCategory: origExceptionCategory
         };
       }
 
@@ -186,6 +189,9 @@ function App() {
       const origLeaveDuration = dayData.status === 'LEAVE'
         ? dayData.leaveDuration
         : (existingEntry?.originalLeaveDuration || null);
+      const origExceptionCategory = dayData.status === 'EXCEPTION'
+        ? dayData.exceptionCategory
+        : (existingEntry?.originalExceptionCategory || null);
 
       // Update the day data
       newData.calendarData[year][month][day] = {
@@ -195,7 +201,9 @@ function App() {
         leaveCategory: dayData.status === 'LEAVE' ? dayData.leaveCategory : null,
         leaveDuration: dayData.status === 'LEAVE' ? dayData.leaveDuration : null,
         originalLeaveCategory: origLeaveCategory,
-        originalLeaveDuration: origLeaveDuration
+        originalLeaveDuration: origLeaveDuration,
+        exceptionCategory: dayData.status === 'EXCEPTION' ? dayData.exceptionCategory : null,
+        originalExceptionCategory: origExceptionCategory
       };
 
       return newData;
@@ -237,7 +245,9 @@ function App() {
         status: isWeekend ? 'WEEKEND' : 'EMPTY',
         time: null,
         leaveCategory: null,
-        leaveDuration: null
+        leaveDuration: null,
+        exceptionCategory: null,
+        originalExceptionCategory: null
       };
     }
 
@@ -249,7 +259,9 @@ function App() {
       leaveCategory: (dayData.status === 'LEAVE' ? dayData.leaveCategory : null) || dayData.originalLeaveCategory || null,
       leaveDuration: (dayData.status === 'LEAVE' ? dayData.leaveDuration : null) || dayData.originalLeaveDuration || null,
       originalLeaveCategory: dayData.originalLeaveCategory || null,
-      originalLeaveDuration: dayData.originalLeaveDuration || null
+      originalLeaveDuration: dayData.originalLeaveDuration || null,
+      exceptionCategory: (dayData.status === 'EXCEPTION' ? dayData.exceptionCategory : null) || dayData.originalExceptionCategory || null,
+      originalExceptionCategory: dayData.originalExceptionCategory || null
     };
   };
 
@@ -326,6 +338,7 @@ function App() {
           dayData={getSelectedDayData()}
           leaveBalances={leaveBalances}
           asOfDate={appData.settings?.leaveSettings?.asOfDate}
+          calendarData={appData.calendarData}
           onSave={handleSaveDay}
           onClose={() => {
             setIsModalOpen(false);

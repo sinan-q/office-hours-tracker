@@ -6,6 +6,7 @@ import {
   calculateDaysCanSkip
 } from '../services/statsService';
 import { calculateLeaveBalances, LEAVE_TYPES } from '../services/leaveService';
+import { calculateExceptionStats } from '../services/exceptionService';
 
 const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
   const { calendarData, settings } = appData;
@@ -17,6 +18,9 @@ const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
 
   // Calculate dynamic leave balances
   const leaveBalances = calculateLeaveBalances(settings, calendarData);
+
+  // Calculate exception stats for the currently viewed quarter
+  const exceptionStats = calculateExceptionStats(calendarData, currentDate);
 
   // Determine color for attendance percentage
   const getAttendanceColor = () => {
@@ -115,6 +119,39 @@ const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
             Tip: Set your starting balances and quarterly accruals in Settings.
           </p>
         )}
+      </div>
+
+      {/* Exception (WFH) Balance Card for Showing Quarter */}
+      <div className="bg-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="text-sm font-semibold text-orange-400 flex items-center gap-1.5">
+            <span>🏠</span>
+            <span>Personal Exigencies (WFH)</span>
+          </h3>
+          <span className="text-[11px] font-semibold px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded-full border border-orange-500/30">
+            {exceptionStats.quarterCode}
+          </span>
+        </div>
+
+        <div className="flex items-baseline justify-between mt-2">
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className={`text-2xl font-bold ${
+                exceptionStats.isExhausted ? 'text-gray-400' : 'text-orange-400'
+              }`}
+            >
+              {exceptionStats.available}
+            </span>
+            <span className="text-xs text-gray-400">/ {exceptionStats.quota} days left</span>
+          </div>
+          <div className="text-right text-xs text-gray-400">
+            <span>Used: <strong className="text-white">{exceptionStats.used}</strong></span>
+          </div>
+        </div>
+
+        <p className="text-[10.5px] text-gray-400 mt-2">
+          {exceptionStats.quarterName} · 4 per quarter (no carry forward).
+        </p>
       </div>
 
       {/* Attendance Percentage */}
