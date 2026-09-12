@@ -44,8 +44,10 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
       status: dayData.status,
       time: dayData.time,
       originalStatus: dayData.originalStatus,
-      leaveCategory: dayData.leaveCategory,
-      leaveDuration: dayData.leaveDuration
+      leaveCategory: (dayData.status === 'LEAVE' ? dayData.leaveCategory : null) || dayData.originalLeaveCategory || null,
+      leaveDuration: (dayData.status === 'LEAVE' ? dayData.leaveDuration : null) || dayData.originalLeaveDuration || null,
+      originalLeaveCategory: dayData.originalLeaveCategory,
+      originalLeaveDuration: dayData.originalLeaveDuration
     };
   };
 

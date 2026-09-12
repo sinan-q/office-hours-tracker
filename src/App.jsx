@@ -124,12 +124,17 @@ function App() {
         }
       } else {
         const existingEntry = prevData?.calendarData?.[year]?.[month]?.[day];
+        const origLeaveCategory = existingEntry?.originalLeaveCategory || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveCategory : null);
+        const origLeaveDuration = existingEntry?.originalLeaveDuration || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveDuration : null);
+
         newData.calendarData[year][month][day] = {
           status: nextStatus,
           time: nextTime,
           originalStatus: originalStatus,
-          leaveCategory: nextStatus === 'LEAVE' ? existingEntry?.leaveCategory || null : null,
-          leaveDuration: nextStatus === 'LEAVE' ? existingEntry?.leaveDuration || null : null
+          leaveCategory: nextStatus === 'LEAVE' ? origLeaveCategory : null,
+          leaveDuration: nextStatus === 'LEAVE' ? origLeaveDuration : null,
+          originalLeaveCategory: origLeaveCategory,
+          originalLeaveDuration: origLeaveDuration
         };
       }
 
@@ -175,13 +180,22 @@ function App() {
         originalStatus = isWeekend ? 'WEEKEND' : 'EMPTY';
       }
 
+      const origLeaveCategory = dayData.status === 'LEAVE'
+        ? dayData.leaveCategory
+        : (existingEntry?.originalLeaveCategory || null);
+      const origLeaveDuration = dayData.status === 'LEAVE'
+        ? dayData.leaveDuration
+        : (existingEntry?.originalLeaveDuration || null);
+
       // Update the day data
       newData.calendarData[year][month][day] = {
         status: dayData.status,
         time: dayData.time,
         originalStatus: originalStatus,
         leaveCategory: dayData.status === 'LEAVE' ? dayData.leaveCategory : null,
-        leaveDuration: dayData.status === 'LEAVE' ? dayData.leaveDuration : null
+        leaveDuration: dayData.status === 'LEAVE' ? dayData.leaveDuration : null,
+        originalLeaveCategory: origLeaveCategory,
+        originalLeaveDuration: origLeaveDuration
       };
 
       return newData;
@@ -232,8 +246,10 @@ function App() {
       status: dayData.status,
       time: dayData.time,
       originalStatus: dayData.originalStatus,
-      leaveCategory: dayData.leaveCategory || null,
-      leaveDuration: dayData.leaveDuration || null
+      leaveCategory: (dayData.status === 'LEAVE' ? dayData.leaveCategory : null) || dayData.originalLeaveCategory || null,
+      leaveDuration: (dayData.status === 'LEAVE' ? dayData.leaveDuration : null) || dayData.originalLeaveDuration || null,
+      originalLeaveCategory: dayData.originalLeaveCategory || null,
+      originalLeaveDuration: dayData.originalLeaveDuration || null
     };
   };
 

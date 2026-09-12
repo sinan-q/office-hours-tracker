@@ -131,9 +131,14 @@ export const processImportedJson = (jsonData, existingData) => {
     const existingEntry = existingData?.calendarData?.[year]?.[month]?.[day];
     let leaveCategory = null;
     let leaveDuration = null;
-    if (internalStatus === 'LEAVE' && existingEntry?.status === 'LEAVE') {
-      leaveCategory = existingEntry.leaveCategory || null;
-      leaveDuration = existingEntry.leaveDuration || null;
+    let originalLeaveCategory = existingEntry?.originalLeaveCategory || null;
+    let originalLeaveDuration = existingEntry?.originalLeaveDuration || null;
+
+    if (internalStatus === 'LEAVE') {
+      leaveCategory = existingEntry?.leaveCategory || existingEntry?.originalLeaveCategory || null;
+      leaveDuration = existingEntry?.leaveDuration || existingEntry?.originalLeaveDuration || null;
+      originalLeaveCategory = leaveCategory;
+      originalLeaveDuration = leaveDuration;
     }
 
     // Set the day data
@@ -143,6 +148,8 @@ export const processImportedJson = (jsonData, existingData) => {
       originalStatus: originalStatus,
       leaveCategory: leaveCategory,
       leaveDuration: leaveDuration,
+      originalLeaveCategory: originalLeaveCategory,
+      originalLeaveDuration: originalLeaveDuration,
     };
   });
 
