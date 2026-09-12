@@ -21,12 +21,12 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
     return status === 'NO SHOW' || status === 'LEAVE' || status === 'EXCEPTION';
   };
 
-  const isHistorical = asOfDate && dayData?.date && dayData.date <= asOfDate;
+  const isHistorical = asOfDate && dayData?.date && dayData.date < asOfDate;
 
-  // Calculate effective balance for a category (refund current day's deduction if already using it)
+  // Calculate effective balance for validation (refund current day's deduction if already using it and not historical)
   const getEffectiveAvailable = (catCode) => {
     let avail = leaveBalances?.[catCode]?.available ?? 0;
-    if (dayData?.status === 'LEAVE' && dayData?.leaveCategory === catCode) {
+    if (!isHistorical && dayData?.status === 'LEAVE' && dayData?.leaveCategory === catCode) {
       avail += (parseFloat(dayData?.leaveDuration) || 1.0);
     }
     return avail;
@@ -173,6 +173,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
                 {Object.keys(LEAVE_TYPES).map((code) => {
                   const type = LEAVE_TYPES[code];
                   const effAvail = getEffectiveAvailable(code);
+                  const currentRemaining = leaveBalances?.[code]?.available ?? 0;
                   const isExhausted = !isHistorical && effAvail < 0.5;
 
                   return (
@@ -182,7 +183,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, onSave, onClose }) => 
                       disabled={isExhausted}
                       className={isExhausted ? 'text-gray-500 bg-gray-800' : ''}
                     >
-                      {type.name} ({type.code}) — {isHistorical ? 'Historical' : `${effAvail} available`}{isExhausted ? ' (Exhausted)' : ''}
+                      {type.name} ({type.code}) — {isHistorical ? 'Historical' : `${currentRemaining} remaining`}{isExhausted ? ' (Exhausted)' : ''}
                     </option>
                   );
                 })}

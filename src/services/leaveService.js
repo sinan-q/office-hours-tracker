@@ -126,7 +126,11 @@ export const calculateLeaveBalances = (settings, calendarData, targetDate = new 
           const dayEntry = calendarData[year][month][day];
           const dateStr = `${year}-${month}-${day}`;
 
-          if (dateStr > asOfDateStr && dateStr <= targetDateStr && dayEntry.status === 'LEAVE') {
+          // Leaves on or after asOfDateStr are active leaves and deduct from balance
+          // Leaves strictly before asOfDateStr are historical and do not deduct
+          const isAfterOrOnAsOf = !asOfDateStr || dateStr >= asOfDateStr;
+
+          if (isAfterOrOnAsOf && dayEntry.status === 'LEAVE') {
             const cat = dayEntry.leaveCategory;
             if (cat && LEAVE_TYPES[cat]) {
               const duration = parseFloat(dayEntry.leaveDuration) || 1.0;
@@ -242,14 +246,14 @@ export const calculateLeaveBalances = (settings, calendarData, targetDate = new 
 export const canSelectLeave = (balances, category, duration, currentDayData, dayDateStr, asOfDateStr) => {
   if (!category || !balances[category]) return true;
 
-  // If the day is on or before asOfDate, it's historical and doesn't consume balance
-  if (asOfDateStr && dayDateStr <= asOfDateStr) {
+  // If the day is strictly before asOfDate, it's historical and doesn't consume balance
+  if (asOfDateStr && dayDateStr < asOfDateStr) {
     return true;
   }
 
   let effectiveAvailable = balances[category].available;
 
-  // If this day is already using this leave category, refund its duration for the check
+  // If this day is already using this leave category and was deducted, refund its duration for the check
   if (currentDayData?.status === 'LEAVE' && currentDayData?.leaveCategory === category) {
     const currentDuration = parseFloat(currentDayData.leaveDuration) || 1.0;
     effectiveAvailable += currentDuration;
