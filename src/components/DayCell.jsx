@@ -37,10 +37,11 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
     if (!minutes || minutes === 0) return null;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
+    const suffix = dayData?.earnedCompOff ? ' (CO)' : '';
     return (
       <div className="text-[10px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate">
-        <span className="hidden md:inline">{hours}h {mins}m</span>
-        <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}</span>
+        <span className="hidden md:inline">{hours}h {mins}m{suffix}</span>
+        <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}{suffix}</span>
       </div>
     );
   };
@@ -48,6 +49,26 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
   const renderBottomContent = () => {
     if (time && time > 0) {
       return renderTime(time);
+    }
+    if (status === 'HOLIDAY' && dayData?.earnedCompOff) {
+      return (
+        <div
+          className="text-[8.5px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-1.5 py-0.5 text-white text-center mt-auto w-full truncate font-medium"
+          title="Holiday (Earned Comp Off)"
+        >
+          Holiday (CO)
+        </div>
+      );
+    }
+    if (status === 'WEEKEND' && dayData?.earnedCompOff) {
+      return (
+        <div
+          className="text-[8.5px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-1.5 py-0.5 text-white text-center mt-auto w-full truncate font-medium"
+          title="Weekend (Earned Comp Off)"
+        >
+          Weekend (CO)
+        </div>
+      );
     }
     if (status === 'LEAVE') {
       const isHalfDay = dayData?.leaveDuration === 0.5;
@@ -72,13 +93,15 @@ const DayCell = ({ dayData, isToday, onClick, onEdit = () => {} }) => {
       let label = 'Exception';
       if (excCat === 'PE') {
         label = 'WFH';
+      } else if (excCat === 'COMP_OFF') {
+        label = 'Comp Off';
       } else if (excCat === 'OTHER') {
         label = 'Other';
       }
       return (
         <div
           className="text-[9px] md:text-xs bg-black bg-opacity-30 rounded px-1 md:px-2 py-0.5 md:py-1 text-white text-center mt-auto w-full truncate font-medium"
-          title={excCat === 'PE' ? 'Personal Exigency (WFH)' : (excCat === 'OTHER' ? 'Other Exception' : 'Exception')}
+          title={excCat === 'PE' ? 'Personal Exigency (WFH)' : (excCat === 'COMP_OFF' ? 'Comp Off' : (excCat === 'OTHER' ? 'Other Exception' : 'Exception'))}
         >
           {label}
         </div>

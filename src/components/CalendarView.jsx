@@ -49,7 +49,9 @@ const CalendarView = ({ currentDate, calendarData, onDayClick, onNavigate, onDay
       originalLeaveCategory: dayData.originalLeaveCategory,
       originalLeaveDuration: dayData.originalLeaveDuration,
       exceptionCategory: (dayData.status === 'EXCEPTION' ? dayData.exceptionCategory : null) || dayData.originalExceptionCategory || null,
-      originalExceptionCategory: dayData.originalExceptionCategory || null
+      originalExceptionCategory: dayData.originalExceptionCategory || null,
+      earnedCompOff: dayData.earnedCompOff ?? false,
+      originalEarnedCompOff: dayData.originalEarnedCompOff ?? false
     };
   };
 

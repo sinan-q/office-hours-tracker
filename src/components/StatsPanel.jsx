@@ -7,6 +7,7 @@ import {
 } from '../services/statsService';
 import { calculateLeaveBalances, LEAVE_TYPES } from '../services/leaveService';
 import { calculateExceptionStats } from '../services/exceptionService';
+import { calculateCompOffBalances } from '../services/compOffService';
 
 const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
   const { calendarData, settings } = appData;
@@ -21,6 +22,9 @@ const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
 
   // Calculate exception stats for the currently viewed quarter
   const exceptionStats = calculateExceptionStats(calendarData, currentDate);
+
+  // Calculate dynamic Comp Off balances
+  const compOffBalances = calculateCompOffBalances(settings?.compOffSettings, calendarData);
 
   // Determine color for attendance percentage
   const getAttendanceColor = () => {
@@ -152,6 +156,47 @@ const StatsPanel = ({ appData, currentDate, onOpenSettings }) => {
         <p className="text-[10.5px] text-gray-400 mt-2">
           {exceptionStats.quarterName} · {exceptionStats.quota} per quarter (no carry forward).
         </p>
+      </div>
+
+      {/* Comp Off Balance Card */}
+      <div className="bg-gray-700 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="text-sm font-semibold text-emerald-400 flex items-center gap-1.5">
+            <span>🎁</span>
+            <span>Comp Off Balance</span>
+          </h3>
+          {onOpenSettings && (
+            <button
+              onClick={onOpenSettings}
+              className="text-[11px] text-gray-400 hover:text-white transition-colors"
+              title="Configure in Settings"
+            >
+              ⚙️ Config
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-baseline justify-between mt-2">
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className={`text-2xl font-bold ${
+                compOffBalances.isExhausted ? 'text-gray-400' : 'text-emerald-400'
+              }`}
+            >
+              {compOffBalances.available}
+            </span>
+            <span className="text-xs text-gray-400">days available</span>
+          </div>
+          <div className="text-right text-xs text-gray-400 space-x-2">
+            <span>Earned: <strong className="text-emerald-300">+{compOffBalances.earned}</strong></span>
+            <span>Used: <strong className="text-white">{compOffBalances.used}</strong></span>
+          </div>
+        </div>
+
+        <div className="text-[10.5px] text-gray-400 mt-2 flex justify-between">
+          <span>Starting Balance: {compOffBalances.startingBalance}</span>
+          <span>Indefinite carry forward</span>
+        </div>
       </div>
 
       {/* Attendance Percentage */}

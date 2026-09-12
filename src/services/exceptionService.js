@@ -19,6 +19,12 @@ export const EXCEPTION_TYPES = {
     shortBadge: 'WFH',
     quotaPerQuarter: 6
   },
+  COMP_OFF: {
+    code: 'COMP_OFF',
+    name: 'Comp Off',
+    shortBadge: 'Comp Off',
+    quotaPerQuarter: null
+  },
   OTHER: {
     code: 'OTHER',
     name: 'Other Exception',

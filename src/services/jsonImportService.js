@@ -149,6 +149,15 @@ export const processImportedJson = (jsonData, existingData) => {
       originalExceptionCategory = exceptionCategory;
     }
 
+    const isWeekendOrHoliday = internalStatus === 'HOLIDAY' || internalStatus === 'WEEKEND';
+    let earnedCompOff = false;
+    let originalEarnedCompOff = existingEntry?.originalEarnedCompOff ?? false;
+
+    if (isWeekendOrHoliday) {
+      earnedCompOff = existingEntry?.earnedCompOff ?? existingEntry?.originalEarnedCompOff ?? false;
+      originalEarnedCompOff = earnedCompOff;
+    }
+
     // Set the day data
     newCalendarData[year][month][day] = {
       status: internalStatus,
@@ -160,6 +169,8 @@ export const processImportedJson = (jsonData, existingData) => {
       originalLeaveDuration: originalLeaveDuration,
       exceptionCategory: exceptionCategory,
       originalExceptionCategory: originalExceptionCategory,
+      earnedCompOff: earnedCompOff,
+      originalEarnedCompOff: originalEarnedCompOff
     };
   });
 

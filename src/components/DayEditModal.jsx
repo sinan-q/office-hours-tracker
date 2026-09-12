@@ -1,17 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { LEAVE_TYPES } from '../services/leaveService';
 import { calculateExceptionStats, canSelectPersonalExigency, EXCEPTION_TYPES } from '../services/exceptionService';
+import { calculateCompOffBalances, canSelectCompOff } from '../services/compOffService';
 
-const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, onClose }) => {
+const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffSettings, onSave, onClose }) => {
   const [status, setStatus] = useState(dayData?.status || 'EMPTY');
   const [time, setTime] = useState(dayData?.time || 0);
   const [leaveCategory, setLeaveCategory] = useState(dayData?.leaveCategory || '');
   const [leaveDuration, setLeaveDuration] = useState(dayData?.leaveDuration ?? 1.0);
+  const [earnedCompOff, setEarnedCompOff] = useState(dayData?.earnedCompOff ?? false);
 
-  // Exception category state ('PE' or 'OTHER')
+  // Exception category state ('PE', 'COMP_OFF', or 'OTHER')
   const excStats = calculateExceptionStats(calendarData, dayData?.date);
   const canSelectPE = canSelectPersonalExigency(calendarData, dayData?.date, dayData);
-  const [exceptionCategory, setExceptionCategory] = useState(dayData?.exceptionCategory || (canSelectPE ? 'PE' : 'OTHER'));
+  const compOffStats = calculateCompOffBalances(compOffSettings, calendarData);
+  const canSelectCO = canSelectCompOff(compOffSettings, calendarData, dayData?.date, dayData);
+
+  const getDefaultExceptionCategory = () => {
+    if (canSelectPE) return 'PE';
+    if (canSelectCO) return 'COMP_OFF';
+    return 'OTHER';
+  };
+
+  const [exceptionCategory, setExceptionCategory] = useState(
+    dayData?.exceptionCategory || getDefaultExceptionCategory()
+  );
 
   useEffect(() => {
     if (dayData) {
@@ -19,7 +32,8 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
       setTime(dayData.time || 0);
       setLeaveCategory(dayData.leaveCategory || '');
       setLeaveDuration(dayData.leaveDuration ?? 1.0);
-      setExceptionCategory(dayData.exceptionCategory || (canSelectPE ? 'PE' : 'OTHER'));
+      setEarnedCompOff(dayData.earnedCompOff ?? false);
+      setExceptionCategory(dayData.exceptionCategory || getDefaultExceptionCategory());
     }
   }, [dayData]);
 
@@ -47,7 +61,8 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
       time: timeValue,
       leaveCategory: status === 'LEAVE' ? (leaveCategory || null) : null,
       leaveDuration: status === 'LEAVE' ? (leaveCategory === 'FL' ? 1.0 : parseFloat(leaveDuration) || 1.0) : null,
-      exceptionCategory: status === 'EXCEPTION' ? (exceptionCategory || 'PE') : null
+      exceptionCategory: status === 'EXCEPTION' ? (exceptionCategory || 'PE') : null,
+      earnedCompOff: (status === 'HOLIDAY' || status === 'WEEKEND') ? earnedCompOff : false
     });
   };
 
@@ -60,7 +75,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
       setTime(0);
     }
     if (newStatus === 'EXCEPTION' && !exceptionCategory) {
-      setExceptionCategory(canSelectPE ? 'PE' : 'OTHER');
+      setExceptionCategory(getDefaultExceptionCategory());
     }
   };
 
@@ -262,6 +277,29 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
           </div>
         )}
 
+        {/* Comp Off Earning (when status is HOLIDAY or WEEKEND) */}
+        {(status === 'HOLIDAY' || status === 'WEEKEND') && (
+          <div className="mb-5 bg-emerald-950/20 border border-emerald-500/30 p-3.5 rounded-lg">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={earnedCompOff}
+                onChange={(e) => setEarnedCompOff(e.target.checked)}
+                className="w-4 h-4 text-emerald-600 rounded bg-gray-700 border-gray-600 focus:ring-emerald-500"
+              />
+              <div>
+                <span className="text-sm font-semibold text-emerald-400">
+                  Worked for Comp Off (+1 day)
+                </span>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Increments available Comp Off counter. Displays as{' '}
+                  <strong>{status === 'HOLIDAY' ? 'Holiday (CO)' : 'Weekend (CO)'}</strong> on the calendar.
+                </p>
+              </div>
+            </label>
+          </div>
+        )}
+
         {/* Exception Details (when status is EXCEPTION) */}
         {status === 'EXCEPTION' && (
           <div className="mb-5 bg-orange-950/20 border border-orange-500/30 p-3.5 rounded-lg space-y-3">
@@ -270,7 +308,9 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
                 Exception Details
               </h3>
               <span className="text-[11px] text-orange-300 font-medium">
-                {excStats.quarterCode}: {excStats.available} / {excStats.quota} WFH left
+                {exceptionCategory === 'COMP_OFF'
+                  ? `${compOffStats.available} Comp Off days left`
+                  : `${excStats.quarterCode}: ${excStats.available} / ${excStats.quota} WFH left`}
               </span>
             </div>
 
@@ -290,17 +330,30 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, onSave, 
                 >
                   Personal Exigency (WFH) — {excStats.available} / {excStats.quota} left in {excStats.quarterCode}{!canSelectPE ? ' (Exhausted)' : ''}
                 </option>
+                <option
+                  value="COMP_OFF"
+                  disabled={!canSelectCO}
+                  className={!canSelectCO ? 'text-gray-500 bg-gray-800' : ''}
+                >
+                  Comp Off — {compOffStats.available} available{!canSelectCO ? ' (Exhausted)' : ''}
+                </option>
                 <option value="OTHER">
                   Other Exception (Uncapped / Special Approval)
                 </option>
               </select>
             </div>
 
-            {exceptionCategory === 'PE' ? (
+            {exceptionCategory === 'PE' && (
               <p className="text-[11px] text-orange-300/80">
                 🏷️ Displays as <strong>WFH</strong> on the calendar cell. Quota: {excStats.quota} per quarter (no carry forward).
               </p>
-            ) : (
+            )}
+            {exceptionCategory === 'COMP_OFF' && (
+              <p className="text-[11px] text-emerald-300/90">
+                🏷️ Displays as <strong>Comp Off</strong> on the calendar cell. Deducts 1 day from available Comp Off balance.
+              </p>
+            )}
+            {exceptionCategory === 'OTHER' && (
               <p className="text-[11px] text-gray-400">
                 🏷️ Displays as <strong>Other</strong> on the calendar cell. Uncapped special exception.
               </p>

@@ -127,6 +127,7 @@ function App() {
         const origLeaveCategory = existingEntry?.originalLeaveCategory || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveCategory : null);
         const origLeaveDuration = existingEntry?.originalLeaveDuration || (existingEntry?.status === 'LEAVE' ? existingEntry.leaveDuration : null);
         const origExceptionCategory = existingEntry?.originalExceptionCategory || (existingEntry?.status === 'EXCEPTION' ? existingEntry.exceptionCategory : null);
+        const origEarnedCompOff = existingEntry?.originalEarnedCompOff ?? existingEntry?.earnedCompOff ?? false;
 
         newData.calendarData[year][month][day] = {
           status: nextStatus,
@@ -137,7 +138,9 @@ function App() {
           originalLeaveCategory: origLeaveCategory,
           originalLeaveDuration: origLeaveDuration,
           exceptionCategory: nextStatus === 'EXCEPTION' ? origExceptionCategory : null,
-          originalExceptionCategory: origExceptionCategory
+          originalExceptionCategory: origExceptionCategory,
+          earnedCompOff: (nextStatus === 'HOLIDAY' || nextStatus === 'WEEKEND') ? origEarnedCompOff : false,
+          originalEarnedCompOff: origEarnedCompOff
         };
       }
 
@@ -192,6 +195,10 @@ function App() {
       const origExceptionCategory = dayData.status === 'EXCEPTION'
         ? dayData.exceptionCategory
         : (existingEntry?.originalExceptionCategory || null);
+      const isWeekendOrHoliday = dayData.status === 'HOLIDAY' || dayData.status === 'WEEKEND';
+      const origEarnedCompOff = isWeekendOrHoliday
+        ? (dayData.earnedCompOff ?? false)
+        : (existingEntry?.originalEarnedCompOff ?? false);
 
       // Update the day data
       newData.calendarData[year][month][day] = {
@@ -203,7 +210,9 @@ function App() {
         originalLeaveCategory: origLeaveCategory,
         originalLeaveDuration: origLeaveDuration,
         exceptionCategory: dayData.status === 'EXCEPTION' ? dayData.exceptionCategory : null,
-        originalExceptionCategory: origExceptionCategory
+        originalExceptionCategory: origExceptionCategory,
+        earnedCompOff: isWeekendOrHoliday ? (dayData.earnedCompOff ?? false) : false,
+        originalEarnedCompOff: origEarnedCompOff
       };
 
       return newData;
@@ -247,7 +256,9 @@ function App() {
         leaveCategory: null,
         leaveDuration: null,
         exceptionCategory: null,
-        originalExceptionCategory: null
+        originalExceptionCategory: null,
+        earnedCompOff: false,
+        originalEarnedCompOff: false
       };
     }
 
@@ -261,7 +272,9 @@ function App() {
       originalLeaveCategory: dayData.originalLeaveCategory || null,
       originalLeaveDuration: dayData.originalLeaveDuration || null,
       exceptionCategory: (dayData.status === 'EXCEPTION' ? dayData.exceptionCategory : null) || dayData.originalExceptionCategory || null,
-      originalExceptionCategory: dayData.originalExceptionCategory || null
+      originalExceptionCategory: dayData.originalExceptionCategory || null,
+      earnedCompOff: dayData.earnedCompOff ?? dayData.originalEarnedCompOff ?? false,
+      originalEarnedCompOff: dayData.originalEarnedCompOff ?? false
     };
   };
 
@@ -339,6 +352,7 @@ function App() {
           leaveBalances={leaveBalances}
           asOfDate={appData.settings?.leaveSettings?.asOfDate}
           calendarData={appData.calendarData}
+          compOffSettings={appData.settings?.compOffSettings}
           onSave={handleSaveDay}
           onClose={() => {
             setIsModalOpen(false);

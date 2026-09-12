@@ -28,6 +28,13 @@ const Settings = ({ settings, onSave, onClose }) => {
     }
   });
 
+  // Comp Off Settings State
+  const defaultCompOffAsOfDate = settings?.compOffSettings?.asOfDate || defaultAsOfDate;
+  const [compOffStartingBalance, setCompOffStartingBalance] = useState(
+    settings?.compOffSettings?.startingBalance ?? 0
+  );
+  const [compOffAsOfDate, setCompOffAsOfDate] = useState(defaultCompOffAsOfDate);
+
   const handleLeaveFieldChange = (type, field, value) => {
     const num = value === '' ? '' : parseFloat(value);
     setLeaveBalances((prev) => ({
@@ -61,6 +68,10 @@ const Settings = ({ settings, onSave, onClose }) => {
           startingBalance: parseFloat(leaveBalances.FL.startingBalance) || 0,
           quarterlyAccrual: parseFloat(leaveBalances.FL.quarterlyAccrual) || 0
         }
+      },
+      compOffSettings: {
+        startingBalance: parseFloat(compOffStartingBalance) || 0,
+        asOfDate: compOffAsOfDate || asOfDate || new Date().toISOString().split('T')[0]
       }
     });
   };
@@ -190,6 +201,55 @@ const Settings = ({ settings, onSave, onClose }) => {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* Section 3: Comp Off Configuration */}
+        <div className="bg-gray-700/40 rounded-lg p-4 mb-6 border border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">
+                Comp Off Tracking
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Work on Holidays and Weekends can be marked to earn Comp Off (+1 day).
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-gray-800/80 rounded-lg p-3 border border-gray-700/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1">
+                Starting Comp Off Balance:
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={compOffStartingBalance}
+                onChange={(e) => setCompOffStartingBalance(e.target.value)}
+                placeholder="0"
+                className="w-full px-2.5 py-1.5 bg-gray-700 text-white rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Available balance on the baseline date.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1">
+                As Of Date:
+              </label>
+              <input
+                type="date"
+                value={compOffAsOfDate}
+                onChange={(e) => setCompOffAsOfDate(e.target.value)}
+                className="w-full px-2.5 py-1.5 bg-gray-700 text-white rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 text-sm"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Only events after this date affect the dynamic balance.
+              </p>
+            </div>
           </div>
         </div>
 
