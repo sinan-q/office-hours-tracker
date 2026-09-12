@@ -6,6 +6,7 @@ import Settings from './components/Settings';
 import DataManager from './components/DataManager';
 import * as storageService from './services/unifiedStorageService';
 import { calculateLeaveBalances } from './services/leaveService';
+import { canSelectPersonalExigency } from './services/exceptionService';
 import './App.css';
 
 function App() {
@@ -81,11 +82,25 @@ function App() {
 
     let nextStatus;
     let nextTime;
+    let nextExceptionCategory = null;
 
     if (isCurrentShow) {
       nextStatus = 'NO SHOW';
       nextTime = null;
     } else if (currentStatus === 'NO SHOW') {
+      // Check if there is WFH (Personal Exigency) quota pending for this quarter
+      const canDoWFH = (originalStatus !== 'WEEKEND' && originalStatus !== 'HOLIDAY') &&
+        canSelectPersonalExigency(appData?.calendarData, dateStr, dayData);
+
+      if (canDoWFH && originalStatus !== 'EXCEPTION') {
+        nextStatus = 'EXCEPTION';
+        nextTime = null;
+        nextExceptionCategory = 'PE';
+      } else {
+        nextStatus = originalStatus;
+        nextTime = null;
+      }
+    } else if (currentStatus === 'EXCEPTION' && originalStatus !== 'EXCEPTION') {
       nextStatus = originalStatus;
       nextTime = null;
     } else {
@@ -129,6 +144,10 @@ function App() {
         const origExceptionCategory = existingEntry?.originalExceptionCategory || (existingEntry?.status === 'EXCEPTION' ? existingEntry.exceptionCategory : null);
         const origEarnedCompOff = existingEntry?.originalEarnedCompOff ?? existingEntry?.earnedCompOff ?? false;
 
+        const effectiveExceptionCategory = nextStatus === 'EXCEPTION'
+          ? (nextExceptionCategory || origExceptionCategory || 'PE')
+          : null;
+
         newData.calendarData[year][month][day] = {
           status: nextStatus,
           time: nextTime,
@@ -137,8 +156,8 @@ function App() {
           leaveDuration: nextStatus === 'LEAVE' ? origLeaveDuration : null,
           originalLeaveCategory: origLeaveCategory,
           originalLeaveDuration: origLeaveDuration,
-          exceptionCategory: nextStatus === 'EXCEPTION' ? origExceptionCategory : null,
-          originalExceptionCategory: origExceptionCategory,
+          exceptionCategory: effectiveExceptionCategory,
+          originalExceptionCategory: origExceptionCategory || (originalStatus === 'EXCEPTION' ? effectiveExceptionCategory : null),
           earnedCompOff: (nextStatus === 'HOLIDAY' || nextStatus === 'WEEKEND') ? origEarnedCompOff : false,
           originalEarnedCompOff: origEarnedCompOff
         };
