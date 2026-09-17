@@ -15,10 +15,10 @@ import { calculateCompOffBalances } from '../services/compOffService';
 export const StatsStrip = ({ appData, currentDate, onOpenDrawer }) => {
   const { calendarData, settings } = appData;
   const attendancePercentage = calculateAttendancePercentage(calendarData, settings, currentDate);
+  const avgHoursTillYesterday = calculateAvgHoursTillYesterday(calendarData, settings, currentDate);
   const exceptionStats = calculateExceptionStats(calendarData, currentDate);
   const compOffBalances = calculateCompOffBalances(settings?.compOffSettings, calendarData);
   const leaveBalances = calculateLeaveBalances(settings, calendarData);
-  const daysCanSkip = calculateDaysCanSkip(calendarData, settings, currentDate);
 
   const attColor = attendancePercentage === 'N/A'
     ? 'text-white/40'
@@ -26,11 +26,15 @@ export const StatsStrip = ({ appData, currentDate, onOpenDrawer }) => {
       ? 'text-emerald-400'
       : 'text-red-400';
 
-  const skipInfo = daysCanSkip?.needShowDays
-    ? { label: `Need ${daysCanSkip.needShowDays}`, color: 'text-red-400' }
-    : daysCanSkip?.canSkip != null
-      ? { label: `Skip ${daysCanSkip.canSkip}`, color: 'text-blue-400' }
-      : null;
+  const getAvgHoursColor = () => {
+    if (avgHoursTillYesterday === 'N/A') return 'text-white/40';
+    const match = avgHoursTillYesterday.match(/(\d+)h\s*(\d+)m/);
+    if (!match) return 'text-white/40';
+    const totalMinutes = parseInt(match[1]) * 60 + parseInt(match[2]);
+    return totalMinutes >= settings.minHoursPerDay ? 'text-emerald-400' : 'text-red-400';
+  };
+
+  const avgColor = getAvgHoursColor();
 
   return (
     <button
@@ -45,13 +49,12 @@ export const StatsStrip = ({ appData, currentDate, onOpenDrawer }) => {
 
         <span className="text-white/10">|</span>
 
-        {/* Skip / Need info */}
-        {skipInfo && (
-          <>
-            <span className={`${skipInfo.color} whitespace-nowrap`}>{skipInfo.label}</span>
-            <span className="text-white/10">|</span>
-          </>
-        )}
+        {/* Avg Hours (shown instead of skip) */}
+        <span className="text-white/60 whitespace-nowrap">
+          Avg <span className={`font-bold ${avgColor}`}>{avgHoursTillYesterday === 'N/A' ? '—' : avgHoursTillYesterday}</span>
+        </span>
+
+        <span className="text-white/10">|</span>
 
         {/* WFH */}
         <span className="text-orange-400/80 whitespace-nowrap">
