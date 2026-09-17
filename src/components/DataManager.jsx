@@ -1,11 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { processImportedJson } from '../services/jsonImportService';
+import { processImportedJson, checkHasUpcomingDays } from '../services/jsonImportService';
 import { saveData, getData } from '../services/supabaseStorageService';
 
 const DataManager = ({ appData, onImport, onClose }) => {
   const fileInputRef = useRef(null);
   const [pastedJson, setPastedJson] = useState('');
   const [importMethod, setImportMethod] = useState('paste'); // 'paste' or 'file'
+  const [pendingImport, setPendingImport] = useState(null); // { jsonData, isExportFormat }
 
   const handleExport = () => {
     getData().then((data) => {
@@ -26,6 +27,94 @@ const DataManager = ({ appData, onImport, onClose }) => {
     fileInputRef.current?.click();
   };
 
+  const executeImport = async (jsonData, isExportFormat, replaceUpcomingAsEmpty) => {
+    try {
+      let updatedData;
+      if (!isExportFormat) {
+        // Company format - process with mapping
+        updatedData = processImportedJson(jsonData, appData, { replaceUpcomingAsEmpty });
+      } else {
+        // Exported backup format
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (replaceUpcomingAsEmpty) {
+          const mergedCalendar = { ...appData?.calendarData, ...jsonData.calendarData };
+          // Reset any future entries in mergedCalendar
+          Object.keys(mergedCalendar).forEach((yStr) => {
+            Object.keys(mergedCalendar[yStr] || {}).forEach((mStr) => {
+              Object.keys(mergedCalendar[yStr][mStr] || {}).forEach((dStr) => {
+                const dDate = new Date(parseInt(yStr), parseInt(mStr) - 1, parseInt(dStr));
+                dDate.setHours(0, 0, 0, 0);
+                if (dDate > today) {
+                  const dayOfWeek = dDate.getDay();
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                  const currentEntry = mergedCalendar[yStr][mStr][dStr];
+                  if (currentEntry?.status !== 'HOLIDAY') {
+                    mergedCalendar[yStr][mStr][dStr] = {
+                      status: isWeekend ? 'WEEKEND' : 'EMPTY',
+                      time: null,
+                      originalStatus: isWeekend ? 'WEEKEND' : 'EMPTY',
+                      leaveCategory: null,
+                      leaveDuration: null,
+                      originalLeaveCategory: null,
+                      originalLeaveDuration: null,
+                      exceptionCategory: null,
+                      originalExceptionCategory: null,
+                      earnedCompOff: false,
+                      originalEarnedCompOff: false
+                    };
+                  }
+                }
+              });
+            });
+          });
+
+          updatedData = {
+            settings: jsonData.settings || appData?.settings,
+            calendarData: mergedCalendar
+          };
+        } else {
+          // Preserve existing user upcoming entries if present
+          const mergedCalendar = { ...appData?.calendarData };
+          Object.keys(jsonData.calendarData || {}).forEach((yStr) => {
+            if (!mergedCalendar[yStr]) mergedCalendar[yStr] = {};
+            Object.keys(jsonData.calendarData[yStr] || {}).forEach((mStr) => {
+              if (!mergedCalendar[yStr][mStr]) mergedCalendar[yStr][mStr] = {};
+              Object.keys(jsonData.calendarData[yStr][mStr] || {}).forEach((dStr) => {
+                const dDate = new Date(parseInt(yStr), parseInt(mStr) - 1, parseInt(dStr));
+                dDate.setHours(0, 0, 0, 0);
+                const isUpcoming = dDate > today;
+                const existingEntry = appData?.calendarData?.[yStr]?.[mStr]?.[dStr];
+
+                if (isUpcoming && existingEntry) {
+                  mergedCalendar[yStr][mStr][dStr] = existingEntry;
+                } else {
+                  mergedCalendar[yStr][mStr][dStr] = jsonData.calendarData[yStr][mStr][dStr];
+                }
+              });
+            });
+          });
+
+          updatedData = {
+            settings: jsonData.settings || appData?.settings,
+            calendarData: mergedCalendar
+          };
+        }
+      }
+
+      await saveData(updatedData);
+      onImport(updatedData);
+      setPendingImport(null);
+      setPastedJson('');
+      alert('Data imported successfully!');
+      onClose();
+    } catch (error) {
+      console.error('Error importing JSON:', error);
+      alert('Error importing JSON: ' + error.message);
+    }
+  };
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -34,25 +123,19 @@ const DataManager = ({ appData, onImport, onClose }) => {
       const text = await file.text();
       const jsonData = JSON.parse(text);
       
-      // Check if it's company format (array) or exported format (object with settings and calendarData)
-      let updatedData;
-      if (Array.isArray(jsonData)) {
-        // Company format - process with mapping
-        updatedData = processImportedJson(jsonData, appData);
-      } else if (jsonData.settings && jsonData.calendarData) {
-        // Exported format - merge directly
-        updatedData = {
-          settings: jsonData.settings,
-          calendarData: { ...appData.calendarData, ...jsonData.calendarData }
-        };
-      } else {
+      const isArray = Array.isArray(jsonData);
+      const isExportFormat = !isArray && jsonData.settings && jsonData.calendarData;
+
+      if (!isArray && !isExportFormat) {
         throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
       }
-      
-      await saveData(updatedData);
-      onImport(updatedData);
-      alert('Data imported successfully from file!');
-      onClose();
+
+      const hasUpcoming = checkHasUpcomingDays(jsonData, appData?.calendarData);
+      if (hasUpcoming) {
+        setPendingImport({ jsonData, isExportFormat });
+      } else {
+        await executeImport(jsonData, isExportFormat, false);
+      }
     } catch (error) {
       console.error('Error importing JSON:', error);
       alert('Error importing JSON: ' + error.message);
@@ -73,26 +156,19 @@ const DataManager = ({ appData, onImport, onClose }) => {
     try {
       const jsonData = JSON.parse(pastedJson);
       
-      // Check if it's company format (array) or exported format (object)
-      let updatedData;
-      if (Array.isArray(jsonData)) {
-        // Company format - process with mapping
-        updatedData = processImportedJson(jsonData, appData);
-      } else if (jsonData.settings && jsonData.calendarData) {
-        // Exported format - merge directly
-        updatedData = {
-          settings: jsonData.settings,
-          calendarData: { ...appData.calendarData, ...jsonData.calendarData }
-        };
-      } else {
+      const isArray = Array.isArray(jsonData);
+      const isExportFormat = !isArray && jsonData.settings && jsonData.calendarData;
+
+      if (!isArray && !isExportFormat) {
         throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
       }
-      
-      await saveData(updatedData);
-      onImport(updatedData);
-      alert('Data imported successfully from pasted JSON!');
-      setPastedJson('');
-      onClose();
+
+      const hasUpcoming = checkHasUpcomingDays(jsonData, appData?.calendarData);
+      if (hasUpcoming) {
+        setPendingImport({ jsonData, isExportFormat });
+      } else {
+        await executeImport(jsonData, isExportFormat, false);
+      }
     } catch (error) {
       console.error('Error parsing pasted JSON:', error);
       alert('Error parsing JSON: ' + error.message);
@@ -205,6 +281,79 @@ const DataManager = ({ appData, onImport, onClose }) => {
         >
           Close
         </button>
+
+        {/* Pending Import Confirmation Modal */}
+        {pendingImport && (
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[70] p-4"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPendingImport(null);
+            }}
+          >
+            <div
+              className="bg-[#1a222d] border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl relative text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center mb-4 text-blue-400">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+
+              <h3 className="text-base font-bold text-white mb-1.5">
+                Upcoming Days Detected
+              </h3>
+              <p className="text-xs text-white/60 leading-relaxed mb-5">
+                The imported data includes records for future dates. How would you like to handle upcoming days?
+              </p>
+
+              <div className="space-y-3 mb-5">
+                {/* Option 1: Keep existing plans (Recommended) */}
+                <button
+                  onClick={() => executeImport(pendingImport.jsonData, pendingImport.isExportFormat, false)}
+                  className="w-full text-left p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-emerald-300 flex items-center gap-1.5">
+                      Keep Existing Plans
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        Recommended
+                      </span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-200/60 leading-snug">
+                    Safeguards your planned SHOW days, leaves, and WFH exceptions for dates after today.
+                  </p>
+                </button>
+
+                {/* Option 2: Replace upcoming as EMPTY */}
+                <button
+                  onClick={() => executeImport(pendingImport.jsonData, pendingImport.isExportFormat, true)}
+                  className="w-full text-left p-3.5 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-white/90">
+                      Replace as EMPTY
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/40 leading-snug">
+                    Resets all upcoming weekdays to EMPTY (and weekends to WEEKEND) for a fresh planning slate.
+                  </p>
+                </button>
+              </div>
+
+              {/* Cancel button */}
+              <button
+                onClick={() => setPendingImport(null)}
+                className="w-full py-2.5 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/50 hover:text-white/70 text-xs font-medium border border-white/[0.06] transition-colors text-center"
+              >
+                Cancel Import
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
