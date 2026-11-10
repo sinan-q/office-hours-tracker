@@ -1,5 +1,5 @@
 #root {
-  max-width: 860px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 0;
   text-align: left;
@@ -10,21 +10,17 @@
   min-height: 100dvh;
 }
 
-/* Glass card effect */
-.glass-card {
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+/* Card surfaces */
+.surface-card {
+  background-color: #14171f;
+  border: 1px solid rgba(237, 237, 237, 0.08);
   border-radius: 12px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
-.glass-card-strong {
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.surface-raised {
+  background-color: #1a1e28;
+  border: 1px solid rgba(237, 237, 237, 0.08);
   border-radius: 14px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 /* Fixed action dock at bottom on mobile */
@@ -35,10 +31,8 @@
   right: 0;
   z-index: 40;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: rgba(15, 20, 25, 0.92);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: #12151c;
+  border-top: 1px solid rgba(237, 237, 237, 0.08);
 }
 
 /* Stats drawer overlay */
@@ -46,9 +40,8 @@
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-  animation: fade-in 200ms ease-out;
+  background: rgba(7, 8, 13, 0.65);
+  animation: fade-in 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Stats drawer panel */
@@ -62,37 +55,35 @@
   max-height: 85dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: rgba(15, 20, 25, 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px 20px 0 0;
-  animation: slide-up 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background-color: #141720;
+  border-top: 1px solid rgba(237, 237, 237, 0.1);
+  border-radius: 16px 16px 0 0;
+  animation: slide-up 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 /* Drawer handle */
 .drawer-handle {
-  width: 36px;
+  width: 32px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(237, 237, 237, 0.16);
   border-radius: 2px;
-  margin: 10px auto 0;
+  margin: 12px auto 4px;
 }
 
 /* Overflow menu */
 .overflow-menu {
   position: absolute;
   right: 0;
-  top: 100%;
+  top: calc(100% + 4px);
   z-index: 30;
-  min-width: 200px;
-  background: rgba(22, 28, 36, 0.97);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  min-width: 190px;
+  background-color: #161922;
+  border: 1px solid rgba(237, 237, 237, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   padding: 4px;
-  animation: fade-in 120ms ease-out;
+  animation: fade-in 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .overflow-menu button {
@@ -103,18 +94,18 @@
   padding: 8px 12px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.8);
+  color: #a1a1a6;
   font-size: 13px;
   font-family: inherit;
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
-  transition: background 120ms;
+  transition: background-color 120ms, color 120ms;
 }
 
 .overflow-menu button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  background-color: rgba(237, 237, 237, 0.06);
+  color: #ededed;
 }
 
 /* Animations */
@@ -136,16 +127,7 @@
   }
 }
 
-/* Sync pulse animation for online status dot */
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
+/* Status dot */
 .status-dot {
   width: 6px;
   height: 6px;
@@ -155,12 +137,11 @@
 }
 
 .status-dot--online {
-  background: #34d399;
+  background-color: #34d399;
 }
 
 .status-dot--local {
-  background: #fb923c;
-  animation: pulse-dot 2s ease-in-out infinite;
+  background-color: #f59e0b;
 }
 
 /* Prevent body scroll when drawer is open */
@@ -168,9 +149,9 @@ body.drawer-open {
   overflow: hidden;
 }
 
-/* Safe area bottom padding for main content when dock is fixed */
+/* Safe area bottom padding for main content when dock is fixed on mobile */
 @media (max-width: 1023px) {
   .main-content-with-dock {
-    padding-bottom: 140px;
+    padding-bottom: 120px;
   }
 }

@@ -13,31 +13,27 @@ body, html {
   padding: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  background: #0f1419;
+  background-color: #0f1115;
+  color: #ededed;
   border: none !important;
   box-shadow: none !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle radial gradient background */
-body {
-  background: radial-gradient(ellipse at 50% 0%, #1a2332 0%, #0f1419 70%);
-  background-attachment: fixed;
-}
-
-/* Scrollbar styling */
+/* Subtle scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(237, 237, 237, 0.12);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(237, 237, 237, 0.2);
 }

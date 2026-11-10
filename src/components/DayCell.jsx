@@ -14,57 +14,80 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     const timeSinceLastTap = now - lastTapTime.current;
 
     if (isPaintMode) {
-      // In paint mode, just forward the click immediately
       onClick();
       return;
     }
 
     if (isSelected && timeSinceLastTap < 400) {
-      // Double-tap on the already-selected day → open editor
       clearTimeout(tapTimeout.current);
       onEdit();
     } else {
-      // Single tap → select the day
       onClick();
     }
 
     lastTapTime.current = now;
   }, [isSelected, isPaintMode, onClick, onEdit]);
 
-  // Determine background color based on status
-  const getBackgroundColor = () => {
+  // Restrained semantic status styling from the direction
+  const getCellTheme = () => {
     // Special case: WEEKEND or HOLIDAY with time logged
     if ((status === 'WEEKEND' || status === 'HOLIDAY') && time && time > 0) {
-      return 'bg-purple-500/80';
+      return {
+        bg: 'bg-[#1b172a] border-[#382b52]',
+        badgeBg: 'bg-[#291f42] text-[#c4b5fd]'
+      };
     }
 
     switch (status) {
       case 'SHOW':
-        return 'bg-emerald-500/80';
+        return {
+          bg: 'bg-[#121c17] border-[#1d3527]',
+          badgeBg: 'bg-[#193223] text-[#6ee7b7]'
+        };
       case 'NO SHOW':
-        return 'bg-red-400/70';
+        return {
+          bg: 'bg-[#211417] border-[#3f1e24]',
+          badgeBg: 'bg-[#3b171f] text-[#fca5a5]'
+        };
       case 'LEAVE':
-        return 'bg-amber-500/75';
+        return {
+          bg: 'bg-[#211b13] border-[#3d2e18]',
+          badgeBg: 'bg-[#352512] text-[#fcd34d]'
+        };
       case 'EXCEPTION':
-        return 'bg-orange-500/75';
+        return {
+          bg: 'bg-[#211812] border-[#3d2716]',
+          badgeBg: 'bg-[#382012] text-[#fdba74]'
+        };
       case 'HOLIDAY':
-        return 'bg-blue-500/70';
+        return {
+          bg: 'bg-[#141b27] border-[#1f2d42]',
+          badgeBg: 'bg-[#1b2b43] text-[#93c5fd]'
+        };
       case 'WEEKEND':
-        return 'bg-white/[0.04]';
+        return {
+          bg: 'bg-[#0f1117] border-white/[0.03]',
+          badgeBg: 'bg-white/[0.04] text-[#a1a1a6]'
+        };
       case 'EMPTY':
       default:
-        return 'bg-white/[0.03]';
+        return {
+          bg: 'bg-[#141720] border-white/[0.05]',
+          badgeBg: 'bg-white/[0.04] text-[#7a8296]'
+        };
     }
   };
 
-  // Convert time to responsive display elements
+  const theme = getCellTheme();
+
+  // Convert time to clean tabular display
   const renderTime = (minutes) => {
     if (!minutes || minutes === 0) return null;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     const suffix = dayData?.earnedCompOff ? ' CO' : '';
     return (
-      <div className="text-[9px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight">
+      <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight tabular-nums font-mono ${theme.badgeBg}`}>
         <span className="hidden md:inline">{hours}h {mins}m{suffix}</span>
         <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}{suffix}</span>
       </div>
@@ -77,20 +100,14 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     }
     if (status === 'HOLIDAY' && dayData?.earnedCompOff) {
       return (
-        <div
-          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
-          title="Holiday (Earned Comp Off)"
-        >
+        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title="Holiday (Earned Comp Off)">
           Holiday CO
         </div>
       );
     }
     if (status === 'WEEKEND' && dayData?.earnedCompOff) {
       return (
-        <div
-          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
-          title="Weekend (Earned Comp Off)"
-        >
+        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title="Weekend (Earned Comp Off)">
           Wknd CO
         </div>
       );
@@ -105,10 +122,7 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
         label = 'Leave ½';
       }
       return (
-        <div
-          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
-          title={label}
-        >
+        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title={label}>
           {label}
         </div>
       );
@@ -124,10 +138,7 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
         label = 'Other';
       }
       return (
-        <div
-          className="text-[8px] md:text-[11px] font-medium bg-black/25 rounded px-1 py-0.5 text-white/90 text-center mt-auto w-full truncate leading-tight"
-          title={excCat === 'PE' ? 'Personal Exigency (WFH)' : (excCat === 'COMP_OFF' ? 'Comp Off' : (excCat === 'OTHER' ? 'Other Exception' : 'Exception'))}
-        >
+        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title={label}>
           {label}
         </div>
       );
@@ -139,22 +150,30 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     <div
       onClick={handleClick}
       className={`
-        ${getBackgroundColor()}
+        ${theme.bg}
+        border
         ${isSelected
-          ? 'ring-2 ring-blue-400 ring-offset-1 ring-offset-[#0f1419] shadow-lg shadow-blue-500/10 scale-[1.04] z-10'
-          : (isToday ? 'ring-1.5 ring-white/30' : '')}
-        ${isPaintMode ? 'cursor-crosshair hover:scale-105 active:scale-95' : 'cursor-pointer hover:brightness-110 active:scale-[0.97]'}
-        p-1 md:p-1.5 min-h-[48px] md:min-h-[68px] rounded-lg
-        transition-all duration-150 select-none
+          ? 'ring-1 ring-[#ededed] border-white/20 z-10'
+          : (isToday ? 'ring-1 ring-white/30' : '')}
+        ${isPaintMode ? 'cursor-crosshair' : 'cursor-pointer'}
+        p-1 md:p-1.5 min-h-[52px] md:min-h-[68px] rounded-lg
+        transition-colors duration-150 select-none
         flex flex-col justify-between
         relative
       `}
     >
       {/* Day number at the top right */}
-      <div className={`text-right font-semibold text-[11px] md:text-sm leading-none pr-0.5 ${
-        status === 'EMPTY' || status === 'WEEKEND' ? 'text-white/40' : 'text-white/90'
-      }`}>
-        {dayNumber}
+      <div className="flex items-center justify-between">
+        {isToday ? (
+          <span className="w-1.5 h-1.5 rounded-full bg-[#ededed] ml-0.5" title="Today" />
+        ) : (
+          <span />
+        )}
+        <span className={`text-[11px] md:text-xs font-medium tabular-nums ${
+          status === 'EMPTY' || status === 'WEEKEND' ? 'text-[#7a8296]' : 'text-[#ededed]'
+        }`}>
+          {dayNumber}
+        </span>
       </div>
 
       {/* Time or status display at the bottom */}

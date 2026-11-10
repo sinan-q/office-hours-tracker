@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DayCell from './DayCell';
+import { IconChevronLeft, IconChevronRight, IconMore, IconZap, IconReset } from './Icons';
 
 const CalendarView = ({
   currentDate,
@@ -37,7 +38,7 @@ const CalendarView = ({
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   // Days of the week header
-  const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Month names
   const monthNames = [
@@ -101,7 +102,7 @@ const CalendarView = ({
   // Add empty cells for days before the first of the month
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className="min-h-[48px] md:min-h-[68px] rounded-lg"></div>
+      <div key={`empty-${i}`} className="min-h-[52px] md:min-h-[68px] rounded-lg bg-transparent"></div>
     );
   }
 
@@ -125,38 +126,41 @@ const CalendarView = ({
   }
 
   return (
-    <div className="glass-card-strong p-2.5 md:p-5">
+    <div className="surface-card p-3 md:p-4">
       {/* Header with navigation & overflow menu */}
-      <div className="flex items-center justify-between mb-3 md:mb-4">
+      <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => onNavigate('prev')}
-          className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm md:text-base"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
           title="Previous month"
+          aria-label="Previous month"
         >
-          ◀
+          <IconChevronLeft className="w-4 h-4" />
         </button>
 
-        <h2 className="text-base md:text-xl font-bold text-white tracking-tight">
+        <h2 className="text-base md:text-lg font-semibold text-[#ededed] tracking-tight tabular-nums">
           {monthNames[month]} {year}
         </h2>
 
         <div className="flex items-center gap-1">
           <button
             onClick={() => onNavigate('next')}
-            className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-all text-sm md:text-base"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
             title="Next month"
+            aria-label="Next month"
           >
-            ▶
+            <IconChevronRight className="w-4 h-4" />
           </button>
 
           {/* Overflow menu */}
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-all text-sm font-bold"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
               title="More options"
+              aria-label="More options"
             >
-              ⋮
+              <IconMore className="w-4 h-4" />
             </button>
 
             {isMenuOpen && (
@@ -167,8 +171,8 @@ const CalendarView = ({
                     setIsMenuOpen(false);
                   }}
                 >
-                  <span className="text-emerald-400">⚡</span>
-                  <span>Fill remaining as Show</span>
+                  <IconZap className="w-3.5 h-3.5 text-[#4cc38a]" />
+                  <span>Mark remaining as Office</span>
                 </button>
                 <button
                   onClick={() => {
@@ -176,8 +180,8 @@ const CalendarView = ({
                     setIsMenuOpen(false);
                   }}
                 >
-                  <span className="text-white/50">↺</span>
-                  <span>Reset remaining</span>
+                  <IconReset className="w-3.5 h-3.5 text-[#a1a1a6]" />
+                  <span>Reset upcoming days</span>
                 </button>
               </div>
             )}
@@ -186,11 +190,14 @@ const CalendarView = ({
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 md:gap-1.5 mb-1">
+      <div className="grid grid-cols-7 gap-1 md:gap-1.5 mb-1.5">
         {weekDays.map((day, i) => (
-          <div key={`${day}-${i}`} className={`text-center font-semibold py-1 text-[10px] md:text-xs ${
-            i === 0 || i === 6 ? 'text-white/25' : 'text-white/40'
-          }`}>
+          <div
+            key={`${day}-${i}`}
+            className={`text-center font-medium py-0.5 text-[11px] ${
+              i === 0 || i === 6 ? 'text-[#7a8296]/60' : 'text-[#7a8296]'
+            }`}
+          >
             {day}
           </div>
         ))}

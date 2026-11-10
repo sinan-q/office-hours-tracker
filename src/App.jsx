@@ -5,6 +5,7 @@ import ActionDock from './components/ActionDock';
 import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
 import DataManager from './components/DataManager';
+import { IconSettings, IconMore, IconTransfer } from './components/Icons';
 import * as storageService from './services/unifiedStorageService';
 import { calculateLeaveBalances } from './services/leaveService';
 import { canSelectPersonalExigency, calculateExceptionStats } from './services/exceptionService';
@@ -598,32 +599,34 @@ function App() {
     <div className="min-h-screen min-h-[100dvh] text-white">
       {/* Compact Header */}
       <header className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-base md:text-lg font-bold text-white tracking-tight">
+        <div className="flex items-center gap-2">
+          <h1 className="text-base font-semibold text-[#ededed] tracking-tight">
             Office Hours
           </h1>
           <span
             className={`status-dot ${storageStatus === 'online' ? 'status-dot--online' : 'status-dot--local'}`}
-            title={storageStatus === 'online' ? 'Synced to cloud' : 'Local mode – not synced'}
+            title={storageStatus === 'online' ? 'Synced to cloud' : 'Local mode'}
           />
         </div>
 
         <div className="flex items-center gap-1" ref={headerMenuRef}>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all text-sm"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
             title="Settings"
+            aria-label="Settings"
           >
-            ⚙
+            <IconSettings className="w-4 h-4" />
           </button>
 
           <div className="relative">
             <button
               onClick={() => setIsHeaderMenuOpen(!isHeaderMenuOpen)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.04] transition-all text-sm font-bold"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
               title="More options"
+              aria-label="More options"
             >
-              ⋮
+              <IconMore className="w-4 h-4" />
             </button>
 
             {isHeaderMenuOpen && (
@@ -632,7 +635,7 @@ function App() {
                   setIsDataManagerOpen(true);
                   setIsHeaderMenuOpen(false);
                 }}>
-                  <span className="text-blue-400">↕</span>
+                  <IconTransfer className="w-4 h-4 text-[#a1a1a6]" />
                   <span>Import / Export</span>
                 </button>
               </div>
@@ -642,7 +645,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="px-3 md:px-4 pb-4 main-content-with-dock space-y-2.5">
+      <main className="px-3 md:px-4 pb-4 main-content-with-dock space-y-3">
         {/* Stats Strip (always visible) */}
         <StatsStrip
           appData={appData}
@@ -665,7 +668,7 @@ function App() {
         />
 
         {/* Desktop Action Dock (inline, visible naturally) */}
-        <div className="hidden lg:block glass-card-strong">
+        <div className="hidden lg:block surface-raised">
           <ActionDock
             selectedDate={selectedDate}
             selectedDayData={getSelectedDayDataForDock()}

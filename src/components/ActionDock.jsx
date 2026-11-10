@@ -2,12 +2,6 @@ import React, { useRef } from 'react';
 
 /**
  * ActionDock - Persistent Thumb-Zone Action Bar for Mobile & Desktop
- * 
- * Features:
- * - 1-tap chip application for Office, WFH, EL, SL, CL, FL, Comp Off, No Show, Clear.
- * - Long-press on any chip activates "Stamp / Paint Mode".
- * - Live remaining balances/quotas on each chip with auto-exhaustion disabling.
- * - Selected day indicator with current status.
  */
 const ActionDock = ({
   selectedDate,
@@ -38,27 +32,27 @@ const ActionDock = ({
 
   // Get human-readable badge for the day's current status
   const getCurrentStatusBadge = () => {
-    if (!selectedDayData) return { label: 'Empty', color: 'bg-white/[0.06] text-white/40' };
+    if (!selectedDayData) return { label: 'Empty', dot: 'bg-[#7a8296]' };
     const { status, leaveCategory, leaveDuration, exceptionCategory, earnedCompOff } = selectedDayData;
 
-    if (status === 'SHOW') return { label: 'Office', color: 'bg-emerald-500/20 text-emerald-400' };
-    if (status === 'NO SHOW') return { label: 'No Show', color: 'bg-red-500/20 text-red-400' };
+    if (status === 'SHOW') return { label: 'Office', dot: 'bg-[#4cc38a]' };
+    if (status === 'NO SHOW') return { label: 'Absent', dot: 'bg-[#e5484d]' };
     if (status === 'LEAVE') {
       const dur = leaveDuration === 0.5 ? ' ½' : '';
-      return { label: `${leaveCategory || 'Leave'}${dur}`, color: 'bg-amber-500/20 text-amber-400' };
+      return { label: `${leaveCategory || 'Leave'}${dur}`, dot: 'bg-[#f59e0b]' };
     }
     if (status === 'EXCEPTION') {
-      if (exceptionCategory === 'PE') return { label: 'WFH', color: 'bg-orange-500/20 text-orange-400' };
-      if (exceptionCategory === 'COMP_OFF') return { label: 'Comp Off', color: 'bg-emerald-500/20 text-emerald-400' };
-      return { label: 'Other', color: 'bg-orange-500/20 text-orange-400' };
+      if (exceptionCategory === 'PE') return { label: 'WFH', dot: 'bg-[#ea580c]' };
+      if (exceptionCategory === 'COMP_OFF') return { label: 'Comp Off', dot: 'bg-[#4cc38a]' };
+      return { label: 'Other', dot: 'bg-[#ea580c]' };
     }
     if (status === 'HOLIDAY') {
-      return { label: earnedCompOff ? 'Holiday CO' : 'Holiday', color: 'bg-blue-500/20 text-blue-400' };
+      return { label: earnedCompOff ? 'Holiday CO' : 'Holiday', dot: 'bg-[#38bdf8]' };
     }
     if (status === 'WEEKEND') {
-      return { label: earnedCompOff ? 'Weekend CO' : 'Weekend', color: 'bg-white/[0.06] text-white/40' };
+      return { label: earnedCompOff ? 'Weekend CO' : 'Weekend', dot: 'bg-[#7a8296]' };
     }
-    return { label: 'Empty', color: 'bg-white/[0.06] text-white/40' };
+    return { label: 'Empty', dot: 'bg-[#7a8296]' };
   };
 
   // Handle pointer down for long press (Paint Mode)
@@ -68,13 +62,13 @@ const ActionDock = ({
     longPressTimer.current = setTimeout(() => {
       isLongPressTriggered.current = true;
       if (navigator.vibrate) {
-        try { navigator.vibrate(50); } catch (_) {}
+        try { navigator.vibrate(40); } catch (_) {}
       }
       onActivatePaintMode(chip);
-    }, 450); // 450ms long-press threshold
+    }, 400);
   };
 
-  const handlePointerUp = (chip) => {
+  const handlePointerUp = () => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
@@ -83,29 +77,24 @@ const ActionDock = ({
 
   const handleClick = (chip) => {
     if (chip.disabled) return;
-    // If long press was triggered, don't execute regular click
     if (isLongPressTriggered.current) {
       isLongPressTriggered.current = false;
       return;
     }
     if (paintMode?.active) {
-      // If already in paint mode, clicking a chip switches the active brush
       onActivatePaintMode(chip);
     } else {
-      // Normal 1-tap apply to selected date
       onApplyChip(selectedDate, chip);
     }
   };
 
-  // Define Chips configuration with live balances
+  // Chips configuration with live balances
   const chips = [
     {
       id: 'SHOW',
       type: 'SHOW',
       label: 'Office',
-      accent: 'emerald',
-      color: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25',
-      activeColor: 'bg-emerald-500 text-white border-emerald-400',
+      dotColor: 'bg-[#4cc38a]',
       disabled: false,
       badge: null
     },
@@ -114,9 +103,7 @@ const ActionDock = ({
       type: 'EXCEPTION',
       exceptionCategory: 'PE',
       label: 'WFH',
-      accent: 'orange',
-      color: 'bg-orange-500/15 border-orange-500/25 text-orange-400 hover:bg-orange-500/25',
-      activeColor: 'bg-orange-500 text-white border-orange-400',
+      dotColor: 'bg-[#ea580c]',
       disabled: (exceptionStats?.available ?? 0) <= 0,
       badge: `${exceptionStats?.available ?? 0}`
     },
@@ -125,9 +112,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'EL',
       label: 'EL',
-      accent: 'amber',
-      color: 'bg-amber-500/15 border-amber-500/25 text-amber-400 hover:bg-amber-500/25',
-      activeColor: 'bg-amber-500 text-white border-amber-400',
+      dotColor: 'bg-[#f59e0b]',
       disabled: (leaveBalances?.EL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.EL?.available ?? 0}`
     },
@@ -136,9 +121,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'SL',
       label: 'SL',
-      accent: 'yellow',
-      color: 'bg-yellow-500/15 border-yellow-500/25 text-yellow-300 hover:bg-yellow-500/25',
-      activeColor: 'bg-yellow-500 text-white border-yellow-400',
+      dotColor: 'bg-[#eab308]',
       disabled: (leaveBalances?.SL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.SL?.available ?? 0}`
     },
@@ -147,9 +130,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'CL',
       label: 'CL',
-      accent: 'rose',
-      color: 'bg-rose-500/15 border-rose-500/25 text-rose-400 hover:bg-rose-500/25',
-      activeColor: 'bg-rose-500 text-white border-rose-400',
+      dotColor: 'bg-[#f43f5e]',
       disabled: (leaveBalances?.CL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.CL?.available ?? 0}`
     },
@@ -158,9 +139,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'FL',
       label: 'FL',
-      accent: 'teal',
-      color: 'bg-teal-500/15 border-teal-500/25 text-teal-400 hover:bg-teal-500/25',
-      activeColor: 'bg-teal-500 text-white border-teal-400',
+      dotColor: 'bg-[#14b8a6]',
       disabled: (leaveBalances?.FL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.FL?.available ?? 0}`
     },
@@ -169,19 +148,15 @@ const ActionDock = ({
       type: 'EXCEPTION',
       exceptionCategory: 'COMP_OFF',
       label: 'CO',
-      accent: 'emerald',
-      color: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/25',
-      activeColor: 'bg-emerald-500 text-white border-emerald-400',
+      dotColor: 'bg-[#4cc38a]',
       disabled: (compOffBalances?.available ?? 0) <= 0,
       badge: `${compOffBalances?.available ?? 0}`
     },
     {
       id: 'NO_SHOW',
       type: 'NO SHOW',
-      label: 'Off',
-      accent: 'red',
-      color: 'bg-red-500/15 border-red-500/25 text-red-400 hover:bg-red-500/25',
-      activeColor: 'bg-red-500 text-white border-red-400',
+      label: 'Absent',
+      dotColor: 'bg-[#e5484d]',
       disabled: false,
       badge: null
     },
@@ -189,9 +164,7 @@ const ActionDock = ({
       id: 'CLEAR',
       type: 'CLEAR',
       label: 'Clear',
-      accent: 'gray',
-      color: 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]',
-      activeColor: 'bg-white/20 text-white border-white/30',
+      dotColor: null,
       disabled: false,
       badge: null
     }
@@ -200,22 +173,22 @@ const ActionDock = ({
   const currentBadge = getCurrentStatusBadge();
 
   return (
-    <div className="w-full p-2.5 md:p-3 transition-all">
+    <div className="w-full p-2.5 md:p-3">
       {/* Top Header Row: Selected Date + Current Status OR Paint Mode Banner */}
       {paintMode?.active ? (
-        <div className="flex items-center justify-between bg-indigo-500/10 border border-indigo-500/25 rounded-lg px-3 py-2 mb-2">
+        <div className="flex items-center justify-between bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-1.5 mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-            <span className="text-xs font-semibold text-indigo-300">
-              Paint: <strong className="text-white">{paintMode.chip?.label}</strong>
+            <span className="w-2 h-2 rounded-full bg-[#ededed]" />
+            <span className="text-xs font-medium text-[#ededed]">
+              Paint: <strong>{paintMode.chip?.label}</strong>
             </span>
-            <span className="text-[10px] text-indigo-300/60 hidden sm:inline">
-              — tap calendar days to apply
+            <span className="text-[11px] text-[#7a8296] hidden sm:inline">
+              Tap days to apply
             </span>
           </div>
           <button
             onClick={onExitPaintMode}
-            className="px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-[11px] font-semibold rounded-md transition-colors"
+            className="px-2.5 py-1 bg-white/[0.08] hover:bg-white/[0.12] text-[#ededed] text-xs font-medium rounded transition-colors"
           >
             Done
           </button>
@@ -223,19 +196,20 @@ const ActionDock = ({
       ) : (
         <div className="flex items-center justify-between mb-2 px-0.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-white/70">
+            <span className="text-xs font-medium text-[#ededed] tabular-nums">
               {formatDateDisplay(selectedDate)}
             </span>
-            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${currentBadge.color}`}>
-              {currentBadge.label}
-            </span>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-xs text-[#a1a1a6]">
+              <span className={`w-1.5 h-1.5 rounded-full ${currentBadge.dot}`} />
+              <span>{currentBadge.label}</span>
+            </div>
           </div>
           <button
             onClick={() => onOpenDetailedEdit(selectedDate)}
-            className="text-[11px] font-medium text-white/30 hover:text-white/60 transition-colors"
-            title="Open full editor (or double-tap a day)"
+            className="text-xs font-medium text-[#a1a1a6] hover:text-[#ededed] transition-colors"
+            title="Open editor"
           >
-            Edit →
+            Edit
           </button>
         </div>
       )}
@@ -250,29 +224,30 @@ const ActionDock = ({
               key={chip.id}
               onClick={() => handleClick(chip)}
               onPointerDown={() => handlePointerDown(chip)}
-              onPointerUp={() => handlePointerUp(chip)}
-              onPointerLeave={() => handlePointerUp(chip)}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
               disabled={chip.disabled}
               className={`
-                relative flex items-center gap-1 px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg border text-center transition-all duration-150 select-none
+                relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors select-none
                 ${chip.disabled
-                  ? 'opacity-30 bg-white/[0.02] border-white/[0.04] text-white/30 cursor-not-allowed'
+                  ? 'opacity-30 bg-transparent border-white/[0.04] text-[#7a8296] cursor-not-allowed'
                   : isCurrentActive
-                  ? `${chip.activeColor} ring-1 ring-indigo-400 shadow-sm scale-105`
-                  : `${chip.color} active:scale-95`}
+                  ? 'bg-[#ededed] text-[#0f1115] border-[#ededed]'
+                  : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.08] text-[#ededed] active:scale-[0.98]'}
               `}
               title={
                 chip.disabled
                   ? `${chip.label} (0 left)`
-                  : `Tap to apply · Hold for paint mode`
+                  : `${chip.label} · Hold to paint`
               }
             >
-              <span className="text-[11px] md:text-xs font-semibold leading-none">
-                {chip.label}
-              </span>
+              {chip.dotColor && !isCurrentActive && (
+                <span className={`w-1.5 h-1.5 rounded-full ${chip.dotColor}`} />
+              )}
+              <span>{chip.label}</span>
               {chip.badge !== null && (
-                <span className={`text-[9px] md:text-[10px] font-bold leading-none ${
-                  chip.disabled ? 'text-red-400/60' : 'opacity-60'
+                <span className={`text-[10px] font-mono tabular-nums ${
+                  isCurrentActive ? 'text-[#0f1115]/70' : 'text-[#7a8296]'
                 }`}>
                   {chip.badge}
                 </span>

@@ -1,12 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { processImportedJson, checkHasUpcomingDays } from '../services/jsonImportService';
 import { saveData, getData } from '../services/supabaseStorageService';
+import { IconClose, IconCalendar, IconUpload, IconDownload } from './Icons';
 
 const DataManager = ({ appData, onImport, onClose }) => {
   const fileInputRef = useRef(null);
   const [pastedJson, setPastedJson] = useState('');
-  const [importMethod, setImportMethod] = useState('paste'); // 'paste' or 'file'
-  const [pendingImport, setPendingImport] = useState(null); // { jsonData, isExportFormat }
+  const [importMethod, setImportMethod] = useState('paste');
+  const [pendingImport, setPendingImport] = useState(null);
 
   const handleExport = () => {
     getData().then((data) => {
@@ -31,16 +32,13 @@ const DataManager = ({ appData, onImport, onClose }) => {
     try {
       let updatedData;
       if (!isExportFormat) {
-        // Company format - process with mapping
         updatedData = processImportedJson(jsonData, appData, { replaceUpcomingAsEmpty });
       } else {
-        // Exported backup format
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         if (replaceUpcomingAsEmpty) {
           const mergedCalendar = { ...appData?.calendarData, ...jsonData.calendarData };
-          // Reset any future entries in mergedCalendar
           Object.keys(mergedCalendar).forEach((yStr) => {
             Object.keys(mergedCalendar[yStr] || {}).forEach((mStr) => {
               Object.keys(mergedCalendar[yStr][mStr] || {}).forEach((dStr) => {
@@ -75,7 +73,6 @@ const DataManager = ({ appData, onImport, onClose }) => {
             calendarData: mergedCalendar
           };
         } else {
-          // Preserve existing user upcoming entries if present
           const mergedCalendar = { ...appData?.calendarData };
           Object.keys(jsonData.calendarData || {}).forEach((yStr) => {
             if (!mergedCalendar[yStr]) mergedCalendar[yStr] = {};
@@ -107,7 +104,6 @@ const DataManager = ({ appData, onImport, onClose }) => {
       onImport(updatedData);
       setPendingImport(null);
       setPastedJson('');
-      alert('Data imported successfully!');
       onClose();
     } catch (error) {
       console.error('Error importing JSON:', error);
@@ -141,7 +137,6 @@ const DataManager = ({ appData, onImport, onClose }) => {
       alert('Error importing JSON: ' + error.message);
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -178,60 +173,68 @@ const DataManager = ({ appData, onImport, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#161c24] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-2xl max-h-[92vh] max-h-[92dvh] overflow-y-auto shadow-2xl border border-white/[0.06]"
+        className="bg-[#141720] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto shadow-2xl border border-white/[0.08]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle for mobile */}
-        <div className="sm:hidden w-8 h-1 bg-white/10 rounded-full mx-auto mb-3" />
+        <div className="sm:hidden drawer-handle mb-3" />
 
-        <h2 className="text-lg font-bold text-white mb-5">Data Management</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-[#ededed]">Data management</h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded text-[#7a8296] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            aria-label="Close"
+          >
+            <IconClose className="w-4 h-4" />
+          </button>
+        </div>
 
         <div className="space-y-4">
           {/* Import Section */}
-          <div className="glass-card p-4">
-            <h3 className="text-sm font-semibold text-white/80 mb-4">Import Data</h3>
+          <div className="surface-card p-4">
+            <h3 className="text-xs font-medium text-[#ededed] mb-3">Import attendance data</h3>
             
             {/* Import Method Toggle */}
-            <div className="flex gap-1.5 mb-4">
+            <div className="flex gap-1 mb-3 bg-[#0f1117] p-1 rounded-lg border border-white/[0.06]">
               <button
                 onClick={() => setImportMethod('paste')}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
+                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   importMethod === 'paste'
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/25'
-                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:bg-white/[0.05]'
+                    ? 'bg-[#1a1e28] text-[#ededed] shadow-sm'
+                    : 'text-[#7a8296] hover:text-[#ededed]'
                 }`}
               >
                 Paste JSON
               </button>
               <button
                 onClick={() => setImportMethod('file')}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all text-sm ${
+                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   importMethod === 'file'
-                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/25'
-                    : 'bg-white/[0.03] text-white/40 border border-white/[0.06] hover:bg-white/[0.05]'
+                    ? 'bg-[#1a1e28] text-[#ededed] shadow-sm'
+                    : 'text-[#7a8296] hover:text-[#ededed]'
                 }`}
               >
-                Upload File
+                Upload file
               </button>
             </div>
 
             {/* Paste JSON Method */}
             {importMethod === 'paste' && (
               <div>
-                <p className="text-[11px] text-white/30 mb-3">
-                  Paste JSON data from your company website (array format) or previously exported app data.
+                <p className="text-[11px] text-[#7a8296] mb-2">
+                  Paste attendance records array or previous exported backup.
                 </p>
                 <textarea
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
                   placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","date":"2025-09-18"}, ...]'
-                  className="w-full px-3 py-3 bg-white/[0.03] border border-white/[0.06] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono text-xs min-h-[120px] resize-y placeholder:text-white/15"
+                  className="w-full px-3 py-2 bg-[#1a1e28] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 font-mono text-xs min-h-[110px] resize-y placeholder:text-[#7a8296]/40"
                 />
                 <button
                   onClick={handlePasteImport}
-                  className="w-full mt-3 px-4 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 rounded-lg font-semibold transition-all text-sm"
+                  className="w-full mt-2.5 px-4 py-2 bg-[#ededed] hover:bg-white text-[#0f1115] rounded-lg font-medium transition-colors text-xs"
                 >
-                  Import from Pasted JSON
+                  Import data
                 </button>
               </div>
             )}
@@ -239,14 +242,15 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* File Upload Method */}
             {importMethod === 'file' && (
               <div>
-                <p className="text-[11px] text-white/30 mb-4">
-                  Import from a JSON file (company format or previously exported app data). This will merge with your existing data.
+                <p className="text-[11px] text-[#7a8296] mb-3">
+                  Upload a JSON attendance export file to merge with existing data.
                 </p>
                 <button
                   onClick={handleImportClick}
-                  className="w-full px-4 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 rounded-lg font-semibold transition-all text-sm"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1a1e28] hover:bg-white/[0.08] text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
                 >
-                  Select JSON File
+                  <IconUpload className="w-4 h-4 text-[#a1a1a6]" />
+                  <span>Choose JSON file</span>
                 </button>
                 <input
                   ref={fileInputRef}
@@ -260,16 +264,17 @@ const DataManager = ({ appData, onImport, onClose }) => {
           </div>
 
           {/* Export Section */}
-          <div className="glass-card p-4">
-            <h3 className="text-sm font-semibold text-white/80 mb-2">Export Data</h3>
-            <p className="text-[11px] text-white/30 mb-3">
-              Download all your calendar data and settings as a JSON file.
+          <div className="surface-card p-4">
+            <h3 className="text-xs font-medium text-[#ededed] mb-1.5">Export backup</h3>
+            <p className="text-[11px] text-[#7a8296] mb-3">
+              Download your calendar records and configuration as a JSON file.
             </p>
             <button
               onClick={handleExport}
-              className="w-full px-4 py-2.5 bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/20 rounded-lg font-semibold transition-all text-sm"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
             >
-              Export to JSON
+              <IconDownload className="w-4 h-4 text-[#a1a1a6]" />
+              <span>Download JSON backup</span>
             </button>
           </div>
         </div>
@@ -277,7 +282,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-full mt-5 px-4 py-2.5 bg-white/[0.04] hover:bg-white/[0.06] text-white/40 border border-white/[0.06] rounded-lg font-semibold transition-all text-sm"
+          className="w-full mt-4 px-4 py-2 bg-transparent hover:bg-white/[0.04] text-[#a1a1a6] hover:text-[#ededed] rounded-lg font-medium transition-colors text-xs"
         >
           Close
         </button>
@@ -285,61 +290,56 @@ const DataManager = ({ appData, onImport, onClose }) => {
         {/* Pending Import Confirmation Modal */}
         {pendingImport && (
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[70] p-4"
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
             onClick={(e) => {
               e.stopPropagation();
               setPendingImport(null);
             }}
           >
             <div
-              className="bg-[#1a222d] border border-white/10 rounded-2xl p-5 sm:p-6 w-full max-w-md shadow-2xl relative text-left"
+              className="bg-[#141720] border border-white/[0.1] rounded-xl p-5 w-full max-w-sm shadow-2xl relative text-left"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center mb-4 text-blue-400">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+              <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-3 text-[#a1a1a6]">
+                <IconCalendar className="w-4 h-4" />
               </div>
 
-              <h3 className="text-base font-bold text-white mb-1.5">
-                Upcoming Days Detected
+              <h3 className="text-sm font-semibold text-[#ededed] mb-1">
+                Upcoming days detected
               </h3>
-              <p className="text-xs text-white/60 leading-relaxed mb-5">
-                The imported data includes records for future dates. How would you like to handle upcoming days?
+              <p className="text-xs text-[#a1a1a6] leading-relaxed mb-4">
+                The imported data contains future dates. Choose how to handle upcoming days:
               </p>
 
-              <div className="space-y-3 mb-5">
-                {/* Option 1: Keep existing plans (Recommended) */}
+              <div className="space-y-2 mb-4">
+                {/* Option 1: Keep existing plans */}
                 <button
                   onClick={() => executeImport(pendingImport.jsonData, pendingImport.isExportFormat, false)}
-                  className="w-full text-left p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all group"
+                  className="w-full text-left p-3 rounded-lg border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-emerald-300 flex items-center gap-1.5">
-                      Keep Existing Plans
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        Recommended
-                      </span>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-xs font-medium text-[#ededed]">
+                      Keep existing plans
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] text-[#a1a1a6]">
+                      Recommended
                     </span>
                   </div>
-                  <p className="text-[11px] text-emerald-200/60 leading-snug">
-                    Safeguards your planned SHOW days, leaves, and WFH exceptions for dates after today.
+                  <p className="text-[11px] text-[#7a8296] leading-snug">
+                    Preserves your planned office days, leaves, and WFH entries after today.
                   </p>
                 </button>
 
                 {/* Option 2: Replace upcoming as EMPTY */}
                 <button
                   onClick={() => executeImport(pendingImport.jsonData, pendingImport.isExportFormat, true)}
-                  className="w-full text-left p-3.5 rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] transition-all group"
+                  className="w-full text-left p-3 rounded-lg border border-white/[0.06] bg-transparent hover:bg-white/[0.04] transition-colors"
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-white/90">
-                      Replace as EMPTY
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-white/40 leading-snug">
-                    Resets all upcoming weekdays to EMPTY (and weekends to WEEKEND) for a fresh planning slate.
+                  <span className="text-xs font-medium text-[#a1a1a6] block mb-0.5">
+                    Clear upcoming days
+                  </span>
+                  <p className="text-[11px] text-[#7a8296] leading-snug">
+                    Resets future days to empty for a fresh planning state.
                   </p>
                 </button>
               </div>
@@ -347,9 +347,9 @@ const DataManager = ({ appData, onImport, onClose }) => {
               {/* Cancel button */}
               <button
                 onClick={() => setPendingImport(null)}
-                className="w-full py-2.5 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-white/50 hover:text-white/70 text-xs font-medium border border-white/[0.06] transition-colors text-center"
+                className="w-full py-2 px-3 rounded-lg text-xs font-medium text-[#7a8296] hover:text-[#ededed] transition-colors text-center"
               >
-                Cancel Import
+                Cancel
               </button>
             </div>
           </div>
