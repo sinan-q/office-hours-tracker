@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const TABLE_NAME = 'office_hours_data';
 const DEFAULT_ID = 'default';
@@ -19,6 +19,10 @@ export const getDefaultData = () => ({
 });
 
 export const getData = async () => {
+  if (!isSupabaseConfigured || !supabase) {
+    throw new Error('Supabase is not configured');
+  }
+
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select('*')
@@ -43,6 +47,10 @@ export const getData = async () => {
 };
 
 export const saveData = async (value) => {
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, error: new Error('Supabase is not configured') };
+  }
+
   const { error } = await supabase
     .from(TABLE_NAME)
     .upsert({ id: DEFAULT_ID, value });
