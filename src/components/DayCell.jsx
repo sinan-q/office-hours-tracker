@@ -5,8 +5,7 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
   const lastTapTime = useRef(0);
   const tapTimeout = useRef(null);
 
-  // Extract day number from date
-  const dayNumber = date ? new Date(date).getDate() : '';
+  const dayNumber = date ? String(new Date(date).getDate()).padStart(2, '0') : '';
 
   // Double-tap handler: first tap selects, second tap on already-selected day opens edit
   const handleClick = useCallback(() => {
@@ -28,121 +27,128 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     lastTapTime.current = now;
   }, [isSelected, isPaintMode, onClick, onEdit]);
 
-  // Quiet Graphite surface styling — status carries via the bottom stamp
+  // 2Office light status styling
   const getCellTheme = () => {
-    // Weekend or Holiday with logged time (no purple slop)
     if ((status === 'WEEKEND' || status === 'HOLIDAY') && time && time > 0) {
       return {
-        bg: 'bg-[#1a1d1b] border-[#4cc38a]/25',
-        badgeBg: 'bg-[#4cc38a]/15 text-[#4cc38a]'
+        bg: 'bg-[#eff6ff] border-[#bfdbfe]',
+        dateBox: 'bg-[#3F51BD] text-white',
+        topLabel: status === 'HOLIDAY' ? 'Holiday' : 'Weekend'
       };
     }
 
     switch (status) {
       case 'SHOW':
         return {
-          bg: 'bg-[#161c18] border-[#4cc38a]/20',
-          badgeBg: 'bg-[#4cc38a]/15 text-[#4cc38a]'
+          bg: 'bg-white border-[#e5e7eb] hover:border-[#cbd5e1]',
+          dateBox: 'bg-[#f3f4f6] text-[#111827]',
+          topLabel: null
         };
       case 'NO SHOW':
         return {
-          bg: 'bg-[#1c1617] border-[#e5484d]/20',
-          badgeBg: 'bg-[#e5484d]/15 text-[#e5484d]'
+          bg: 'bg-[#fff5f5] border-[#fecaca]',
+          dateBox: 'bg-[#fee2e2] text-[#b91c1c]',
+          topLabel: null
         };
       case 'LEAVE':
         return {
-          bg: 'bg-[#1c1a16] border-[#f59e0b]/20',
-          badgeBg: 'bg-[#f59e0b]/15 text-[#f59e0b]'
+          bg: 'bg-[#f0fdf4] border-[#bbf7d0]',
+          dateBox: 'bg-[#B0EEAE] text-[#14532d]',
+          topLabel: dayData?.leaveCategory
+            ? `${dayData.leaveCategory}${dayData?.leaveDuration === 0.5 ? ' ½' : ''}`
+            : 'Leave'
         };
       case 'EXCEPTION':
+        if (dayData?.exceptionCategory === 'COMP_OFF') {
+          return {
+            bg: 'bg-[#f0f9ff] border-[#bae6fd]',
+            dateBox: 'bg-[#B2DDF9] text-[#0c4a6e]',
+            topLabel: 'Comp Off'
+          };
+        }
         return {
-          bg: 'bg-[#1c1816] border-[#ea580c]/20',
-          badgeBg: 'bg-[#ea580c]/15 text-[#fb923c]'
+          bg: 'bg-[#fff7ed] border-[#fed7aa]',
+          dateBox: 'bg-[#FFC488] text-[#7c2d12]',
+          topLabel: dayData?.exceptionCategory === 'PE' ? 'WFH' : 'Exception'
         };
       case 'HOLIDAY':
         return {
-          bg: 'bg-[#16191e] border-[#38bdf8]/20',
-          badgeBg: 'bg-[#38bdf8]/15 text-[#7dd3fc]'
+          bg: 'bg-[#fff1f2] border-[#fecdd3]',
+          dateBox: 'bg-[#FCC1C1] text-[#881337]',
+          topLabel: 'Branch Holiday'
         };
       case 'WEEKEND':
         return {
-          bg: 'bg-[#141415] border-white/[0.04]',
-          badgeBg: 'bg-white/[0.05] text-[#a1a1a6]'
+          bg: 'bg-[#f3f4f6] border-[#e5e7eb]',
+          dateBox: 'bg-[#e5e7eb] text-[#6b7280]',
+          topLabel: null
         };
       case 'EMPTY':
       default:
         return {
-          bg: 'bg-[#19191b] border-white/[0.06]',
-          badgeBg: 'bg-white/[0.05] text-[#85858b]'
+          bg: 'bg-white border-[#e5e7eb] hover:border-[#cbd5e1]',
+          dateBox: 'bg-[#f3f4f6] text-[#4b5563]',
+          topLabel: null
         };
     }
   };
 
   const theme = getCellTheme();
 
-  // Convert time to clean tabular display
-  const renderTime = (minutes) => {
-    if (!minutes || minutes === 0) return null;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    const suffix = dayData?.earnedCompOff ? ' CO' : '';
-    return (
-      <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight tabular-nums font-mono ${theme.badgeBg}`}>
-        <span className="hidden md:inline">{hours}h {mins}m{suffix}</span>
-        <span className="inline md:hidden">{hours}:{mins.toString().padStart(2, '0')}{suffix}</span>
-      </div>
-    );
-  };
-
   const renderBottomContent = () => {
     if (time && time > 0) {
-      return renderTime(time);
-    }
-    if (status === 'HOLIDAY' && dayData?.earnedCompOff) {
+      const hours = Math.floor(time / 60);
+      const mins = time % 60;
+      const timeStr = `${hours}h ${mins}m`;
+      const compactStr = `${hours}:${String(mins).padStart(2, '0')}`;
       return (
-        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title="Holiday (Earned Comp Off)">
-          Holiday CO
+        <div className="mt-auto pt-1 text-left">
+          <div className="hidden md:flex items-center gap-1 text-xs text-[#1f2937] font-medium truncate">
+            <span>At Office</span>
+            <span className="text-[#9ca3af]">|</span>
+            <span className="font-mono tabular-nums text-[#374151]">{timeStr}</span>
+          </div>
+          <div className="flex md:hidden items-center justify-center rounded px-1 py-0.5 bg-[#f3f4f6] text-[11px] font-mono tabular-nums text-[#1f2937]">
+            {compactStr}
+          </div>
+          {dayData?.earnedCompOff && (
+            <div className="text-[11px] text-[#3F51BD] font-medium truncate hidden md:block">
+              +1 Comp Off
+            </div>
+          )}
         </div>
       );
     }
-    if (status === 'WEEKEND' && dayData?.earnedCompOff) {
+
+    if (status === 'NO SHOW') {
       return (
-        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title="Weekend (Earned Comp Off)">
-          Wknd CO
+        <div className="mt-auto pt-1 text-left">
+          <span className="hidden md:inline text-xs font-medium text-[#dc2626]">
+            No Show <span className="text-[#ef4444]/70">›››</span>
+          </span>
+          <span className="inline md:hidden text-[11px] font-medium text-[#dc2626]">
+            Absent
+          </span>
         </div>
       );
     }
-    if (status === 'LEAVE') {
-      const isHalfDay = dayData?.leaveDuration === 0.5;
-      const cat = dayData?.leaveCategory;
-      let label = 'Leave';
-      if (cat) {
-        label = isHalfDay ? `${cat} ½` : cat;
-      } else if (isHalfDay) {
-        label = 'Leave ½';
-      }
+
+    if ((status === 'HOLIDAY' || status === 'WEEKEND') && dayData?.earnedCompOff) {
       return (
-        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title={label}>
-          {label}
+        <div className="mt-auto pt-1 text-xs font-medium text-[#3F51BD] truncate">
+          +1 CO
         </div>
       );
     }
-    if (status === 'EXCEPTION') {
-      const excCat = dayData?.exceptionCategory;
-      let label = 'Exception';
-      if (excCat === 'PE') {
-        label = 'WFH';
-      } else if (excCat === 'COMP_OFF') {
-        label = 'Comp Off';
-      } else if (excCat === 'OTHER') {
-        label = 'Other';
-      }
+
+    if (theme.topLabel) {
       return (
-        <div className={`text-[10px] md:text-[11px] font-medium rounded px-1 py-0.5 text-center mt-auto w-full truncate leading-tight ${theme.badgeBg}`} title={label}>
-          {label}
+        <div className="mt-auto pt-1 text-[11px] md:hidden font-medium text-[#374151] truncate">
+          {theme.topLabel}
         </div>
       );
     }
+
     return null;
   };
 
@@ -153,30 +159,31 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
         ${theme.bg}
         border
         ${isSelected
-          ? 'ring-1 ring-[#ededed] border-[#ededed]/30 z-10'
-          : (isToday ? 'ring-1 ring-white/25' : '')}
+          ? 'ring-2 ring-[#3F51BD] border-[#3F51BD] z-10'
+          : (isToday ? 'ring-1 ring-[#3F51BD]/60' : '')}
         ${isPaintMode ? 'cursor-crosshair' : 'cursor-pointer'}
-        p-1 md:p-1.5 min-h-[56px] md:min-h-[72px] rounded-lg
+        p-1.5 min-h-[68px] md:min-h-[92px] rounded-md
         transition-colors duration-150 select-none
         flex flex-col justify-between
         relative
       `}
     >
-      {/* Day number at the top right */}
-      <div className="flex items-center justify-between">
-        {isToday ? (
-          <span className="w-1.5 h-1.5 rounded-full bg-[#ededed] ml-0.5" title="Today" />
-        ) : (
-          <span />
-        )}
-        <span className={`text-xs font-medium font-mono tabular-nums ${
-          status === 'EMPTY' || status === 'WEEKEND' ? 'text-[#85858b]' : 'text-[#ededed]'
-        }`}>
+      {/* Top Row: Date Box + Status Label (Desktop) */}
+      <div className="flex items-start gap-1.5">
+        <div className={`w-6 h-6 md:w-7 md:h-7 rounded flex items-center justify-center text-xs font-mono font-medium shrink-0 ${theme.dateBox}`}>
           {dayNumber}
-        </span>
+        </div>
+        {theme.topLabel && (
+          <span className="hidden md:inline text-xs font-medium text-[#374151] leading-tight pt-1 truncate">
+            {theme.topLabel}
+          </span>
+        )}
+        {isToday && (
+          <span className="w-1.5 h-1.5 rounded-full bg-[#3F51BD] ml-auto mt-1 shrink-0" title="Today" />
+        )}
       </div>
 
-      {/* Time or status display at the bottom */}
+      {/* Bottom Row: Office / Time / No Show */}
       {renderBottomContent()}
     </div>
   );

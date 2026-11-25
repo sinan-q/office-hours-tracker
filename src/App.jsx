@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import CalendarView from './components/CalendarView';
-import { StatsStrip, StatsDrawer } from './components/StatsPanel';
+import { StatsStrip, StatsDrawer, WfoIndexSidebar } from './components/StatsPanel';
 import ActionDock from './components/ActionDock';
 import DayEditModal from './components/DayEditModal';
 import Settings from './components/Settings';
@@ -646,7 +646,7 @@ function App() {
   if (!appData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/40 text-sm font-medium">Loading…</div>
+        <div className="text-[#6b7280] text-sm font-medium">Loading…</div>
       </div>
     );
   }
@@ -656,12 +656,15 @@ function App() {
   const compOffBalances = appData ? calculateCompOffBalances(appData.settings?.compOffSettings, appData.calendarData) : {};
 
   return (
-    <div className="min-h-screen min-h-[100dvh] text-white">
-      {/* Compact Header */}
-      <header className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-base font-medium text-[#ededed] tracking-tight">
-            Office Hours
+    <div className="min-h-screen min-h-[100dvh] text-[#1f2937]">
+      {/* 2Office-style Top Header */}
+      <header className="bg-white border-b border-[#e5e7eb] px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-md bg-[#3F51BD] text-white flex items-center justify-center text-xs font-semibold">
+            2O
+          </div>
+          <h1 className="text-base font-semibold text-[#111827] tracking-tight">
+            2Office
           </h1>
           <span
             className={`status-dot ${storageStatus === 'online' ? 'status-dot--online' : 'status-dot--local'}`}
@@ -672,7 +675,7 @@ function App() {
         <div className="flex items-center gap-1" ref={headerMenuRef}>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
             title="Settings"
             aria-label="Settings"
           >
@@ -682,7 +685,7 @@ function App() {
           <div className="relative">
             <button
               onClick={() => setIsHeaderMenuOpen(!isHeaderMenuOpen)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
               title="More options"
               aria-label="More options"
             >
@@ -695,7 +698,7 @@ function App() {
                   setIsDataManagerOpen(true);
                   setIsHeaderMenuOpen(false);
                 }}>
-                  <IconTransfer className="w-4 h-4 text-[#a1a1a6]" />
+                  <IconTransfer className="w-4 h-4 text-[#6b7280]" />
                   <span>Import / Export</span>
                 </button>
               </div>
@@ -704,43 +707,58 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-3 md:px-4 pb-4 main-content-with-dock space-y-3">
-        {/* Stats Strip (always visible) */}
-        <StatsStrip
-          appData={appData}
-          currentDate={currentDate}
-          onOpenDrawer={() => setIsStatsDrawerOpen(true)}
-        />
+      {/* Main Content: 2-Column 2Office Layout on Desktop */}
+      <main className="px-3 md:px-4 py-4 main-content-with-dock">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          {/* Left / Main Column: Calendar + Action Dock */}
+          <div className="lg:col-span-9 space-y-3">
+            {/* Mobile Stats Strip */}
+            <div className="lg:hidden">
+              <StatsStrip
+                appData={appData}
+                currentDate={currentDate}
+                onOpenDrawer={() => setIsStatsDrawerOpen(true)}
+              />
+            </div>
 
-        {/* Calendar */}
-        <CalendarView
-          currentDate={currentDate}
-          calendarData={appData.calendarData}
-          selectedDate={selectedDate}
-          paintMode={paintMode}
-          onSelectDay={handleSelectDay}
-          onDayClick={handleSelectDay}
-          onNavigate={handleNavigate}
-          onDayEdit={handleOpenDetailedEdit}
-          onFillRemainingShow={handleFillRemainingShow}
-          onResetRemaining={handleResetRemaining}
-        />
+            <CalendarView
+              currentDate={currentDate}
+              calendarData={appData.calendarData}
+              selectedDate={selectedDate}
+              paintMode={paintMode}
+              onSelectDay={handleSelectDay}
+              onDayClick={handleSelectDay}
+              onNavigate={handleNavigate}
+              onDayEdit={handleOpenDetailedEdit}
+              onFillRemainingShow={handleFillRemainingShow}
+              onResetRemaining={handleResetRemaining}
+            />
 
-        {/* Desktop Action Dock (inline, visible naturally) */}
-        <div className="hidden lg:block surface-raised">
-          <ActionDock
-            selectedDate={selectedDate}
-            selectedDayData={getSelectedDayDataForDock()}
-            leaveBalances={leaveBalances}
-            exceptionStats={exceptionStats}
-            compOffBalances={compOffBalances}
-            paintMode={paintMode}
-            onApplyChip={handleApplyChip}
-            onActivatePaintMode={handleActivatePaintMode}
-            onExitPaintMode={handleExitPaintMode}
-            onOpenDetailedEdit={handleOpenDetailedEdit}
-          />
+            {/* Desktop Action Dock */}
+            <div className="hidden lg:block surface-raised">
+              <ActionDock
+                selectedDate={selectedDate}
+                selectedDayData={getSelectedDayDataForDock()}
+                leaveBalances={leaveBalances}
+                exceptionStats={exceptionStats}
+                compOffBalances={compOffBalances}
+                paintMode={paintMode}
+                onApplyChip={handleApplyChip}
+                onActivatePaintMode={handleActivatePaintMode}
+                onExitPaintMode={handleExitPaintMode}
+                onOpenDetailedEdit={handleOpenDetailedEdit}
+              />
+            </div>
+          </div>
+
+          {/* Right Sidebar: My WFO Index (Desktop) */}
+          <div className="hidden lg:block lg:col-span-3">
+            <WfoIndexSidebar
+              appData={appData}
+              currentDate={currentDate}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
+          </div>
         </div>
       </main>
 

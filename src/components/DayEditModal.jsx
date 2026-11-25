@@ -128,18 +128,18 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0f0f10]/75 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#111827]/45 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#19191b] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-md border border-white/[0.08] max-h-[90vh] max-h-[90dvh] overflow-y-auto"
+        className="bg-white rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-md border border-[#e5e7eb] shadow-xl max-h-[90vh] max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sm:hidden drawer-handle mb-3" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-medium text-[#ededed]">Edit day</h2>
+          <h2 className="text-base font-semibold text-[#111827]">Edit day</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#85858b] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-lg text-[#6b7280] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
             aria-label="Close"
           >
             <IconClose className="w-4 h-4" />
@@ -147,10 +147,10 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
         </div>
         
         {/* Date Display */}
-        <div className="mb-4 surface-card bg-[#141415] p-3">
-          <p className="text-sm font-medium text-[#ededed] tabular-nums">{formatDate(dayData.date)}</p>
+        <div className="mb-4 surface-card bg-[#f9fafb] p-3">
+          <p className="text-sm font-medium text-[#111827] tabular-nums">{formatDate(dayData.date)}</p>
           {isHistorical && status === 'LEAVE' && (
-            <p className="text-xs text-[#f59e0b] mt-1">
+            <p className="text-xs text-[#d97706] mt-1">
               Historical date — does not deduct from balances
             </p>
           )}
@@ -158,13 +158,13 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
 
         {/* Status Dropdown */}
         <div className="mb-4">
-          <label className="block text-xs text-[#a1a1a6] mb-1.5">
+          <label className="block text-xs text-[#4b5563] mb-1.5">
             Status
           </label>
           {status === 'EMPTY' ? (
             <button
               onClick={handleAddStatus}
-              className="w-full px-4 py-2.5 surface-card hover:bg-white/[0.06] text-[#a1a1a6] hover:text-[#ededed] rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-xs"
+              className="w-full px-4 py-2.5 bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-[#4b5563] hover:text-[#111827] rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-xs"
             >
               <IconPlus className="w-3.5 h-3.5" />
               <span>Add status</span>
@@ -175,7 +175,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
                 <select
                   value={status}
                   onChange={handleStatusChange}
-                  className="flex-1 px-3 py-2 bg-[#1a1e28] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 text-xs"
+                  className="flex-1 px-3 py-2 bg-white border border-[#d1d5db] text-[#111827] rounded-lg focus:outline-none focus:border-[#3F51BD] text-xs"
                 >
                   <option value="NO SHOW">Absent (No show)</option>
                   <option value="LEAVE">Leave</option>
@@ -184,13 +184,13 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
                   <option value="WEEKEND">Weekend</option>
                 </select>
               ) : (
-                <div className="flex-1 px-3 py-2 surface-card text-[#ededed] flex items-center text-xs font-medium">
-                  Office (Show)
+                <div className="flex-1 px-3 py-2 bg-[#f9fafb] border border-[#e5e7eb] rounded-lg text-[#111827] flex items-center text-xs font-medium">
+                  At Office (Show)
                 </div>
               )}
               <button
                 onClick={handleClearStatus}
-                className="px-3 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-[#a1a1a6] hover:text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
+                className="px-3 py-2 bg-[#f9fafb] hover:bg-[#f3f4f6] text-[#4b5563] hover:text-[#111827] border border-[#d1d5db] rounded-lg font-medium transition-colors text-xs"
               >
                 Clear
               </button>
@@ -364,7 +364,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
         {/* Time Input (Hours & Minutes + Presets) */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs text-[#a1a1a6]">
+            <label className="block text-xs text-[#4b5563]">
               Time logged
             </label>
             {!isTimeDisabled() && (
@@ -376,8 +376,8 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
                     onClick={() => applyTimePreset(preset)}
                     className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors border ${
                       parseInt(time) === preset
-                        ? 'bg-white/[0.12] text-[#ededed] border-white/20'
-                        : 'bg-[#141415] text-[#85858b] hover:text-[#ededed] border-white/[0.06]'
+                        ? 'bg-[#eef2ff] text-[#3F51BD] border-[#c7d2fe]'
+                        : 'bg-[#f9fafb] text-[#6b7280] hover:text-[#111827] border-[#e5e7eb]'
                     }`}
                   >
                     {preset / 60}h
@@ -398,13 +398,13 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
                 max="24"
                 aria-label="Hours"
                 className={`
-                  w-full px-3 py-2 pr-8 rounded-lg focus:outline-none focus:border-white/30 text-xs font-mono tabular-nums
+                  w-full px-3 py-2 pr-8 rounded-lg focus:outline-none focus:border-[#3F51BD] text-xs font-mono tabular-nums
                   ${isTimeDisabled()
-                    ? 'bg-transparent text-[#85858b] cursor-not-allowed border border-white/[0.04]'
-                    : 'bg-[#232325] text-[#ededed] border border-white/[0.08]'}
+                    ? 'bg-[#f9fafb] text-[#9ca3af] cursor-not-allowed border border-[#e5e7eb]'
+                    : 'bg-white text-[#111827] border border-[#d1d5db]'}
                 `}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#85858b] pointer-events-none">h</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#6b7280] pointer-events-none">h</span>
             </div>
             <div className="relative">
               <input
@@ -416,13 +416,13 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
                 max="59"
                 aria-label="Minutes"
                 className={`
-                  w-full px-3 py-2 pr-8 rounded-lg focus:outline-none focus:border-white/30 text-xs font-mono tabular-nums
+                  w-full px-3 py-2 pr-8 rounded-lg focus:outline-none focus:border-[#3F51BD] text-xs font-mono tabular-nums
                   ${isTimeDisabled()
-                    ? 'bg-transparent text-[#85858b] cursor-not-allowed border border-white/[0.04]'
-                    : 'bg-[#232325] text-[#ededed] border border-white/[0.08]'}
+                    ? 'bg-[#f9fafb] text-[#9ca3af] cursor-not-allowed border border-[#e5e7eb]'
+                    : 'bg-white text-[#111827] border border-[#d1d5db]'}
                 `}
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#85858b] pointer-events-none">m</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#6b7280] pointer-events-none">m</span>
             </div>
           </div>
         </div>
@@ -431,13 +431,13 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
         <div className="flex gap-2">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-[#ededed] hover:bg-white text-[#141415] rounded-lg font-medium transition-colors text-xs"
+            className="flex-1 px-4 py-2 bg-[#3F51BD] hover:bg-[#33419c] text-white rounded-lg font-medium transition-colors text-xs"
           >
             Save
           </button>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-[#a1a1a6] hover:text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
+            className="flex-1 px-4 py-2 bg-[#f9fafb] hover:bg-[#f3f4f6] text-[#4b5563] hover:text-[#111827] border border-[#d1d5db] rounded-lg font-medium transition-colors text-xs"
           >
             Cancel
           </button>

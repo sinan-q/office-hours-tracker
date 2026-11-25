@@ -175,18 +175,18 @@ const DataManager = ({ appData, onImport, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0f0f10]/75 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#111827]/45 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#19191b] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto border border-white/[0.08]"
+        className="bg-white rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto border border-[#e5e7eb] shadow-xl text-[#111827]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sm:hidden drawer-handle mb-3" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-medium text-[#ededed]">Data management</h2>
+          <h2 className="text-base font-semibold text-[#111827]">Data management</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#85858b] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-lg text-[#6b7280] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
             aria-label="Close"
           >
             <IconClose className="w-4 h-4" />
@@ -196,7 +196,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
         {errorMessage && (
           <div
             role="alert"
-            className="mb-4 px-3 py-2.5 rounded-lg bg-[#e5484d]/10 border border-[#e5484d]/25 text-xs text-[#e5484d]"
+            className="mb-4 px-3 py-2.5 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-xs text-[#dc2626]"
           >
             {errorMessage}
           </div>
@@ -204,17 +204,17 @@ const DataManager = ({ appData, onImport, onClose }) => {
 
         <div className="space-y-4">
           {/* Import Section */}
-          <div className="surface-card bg-[#141415] p-4">
-            <h3 className="text-xs font-medium text-[#ededed] mb-3">Import attendance data</h3>
+          <div className="surface-card bg-[#f9fafb] p-4">
+            <h3 className="text-xs font-semibold text-[#111827] mb-3">Import attendance data</h3>
             
             {/* Import Method Toggle */}
-            <div className="flex gap-1 mb-3 bg-[#19191b] p-1 rounded-lg border border-white/[0.06]">
+            <div className="flex gap-1 mb-3 bg-[#e5e7eb]/70 p-1 rounded-lg">
               <button
                 onClick={() => { setImportMethod('paste'); setErrorMessage(''); }}
                 className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   importMethod === 'paste'
-                    ? 'bg-[#232325] text-[#ededed]'
-                    : 'text-[#85858b] hover:text-[#ededed]'
+                    ? 'bg-white text-[#111827] shadow-sm'
+                    : 'text-[#6b7280] hover:text-[#111827]'
                 }`}
               >
                 Paste JSON
@@ -223,8 +223,8 @@ const DataManager = ({ appData, onImport, onClose }) => {
                 onClick={() => { setImportMethod('file'); setErrorMessage(''); }}
                 className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   importMethod === 'file'
-                    ? 'bg-[#232325] text-[#ededed]'
-                    : 'text-[#85858b] hover:text-[#ededed]'
+                    ? 'bg-white text-[#111827] shadow-sm'
+                    : 'text-[#6b7280] hover:text-[#111827]'
                 }`}
               >
                 Upload file
@@ -234,18 +234,18 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* Paste JSON Method */}
             {importMethod === 'paste' && (
               <div>
-                <p className="text-xs text-[#85858b] mb-2">
+                <p className="text-xs text-[#6b7280] mb-2">
                   Paste attendance records array or exported backup
                 </p>
                 <textarea
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
                   placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","date":"2025-09-18"}]'
-                  className="w-full px-3 py-2 bg-[#232325] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 font-mono text-xs min-h-[110px] resize-y placeholder:text-[#85858b]/50"
+                  className="w-full px-3 py-2 bg-white border border-[#d1d5db] text-[#111827] rounded-lg focus:outline-none focus:border-[#3F51BD] font-mono text-xs min-h-[110px] resize-y placeholder:text-[#9ca3af]"
                 />
                 <button
                   onClick={handlePasteImport}
-                  className="w-full mt-2.5 px-4 py-2 bg-[#ededed] hover:bg-white text-[#141415] rounded-lg font-medium transition-colors text-xs"
+                  className="w-full mt-2.5 px-4 py-2 bg-[#3F51BD] hover:bg-[#33419c] text-white rounded-lg font-medium transition-colors text-xs"
                 >
                   Import data
                 </button>
@@ -255,14 +255,14 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* File Upload Method */}
             {importMethod === 'file' && (
               <div>
-                <p className="text-xs text-[#85858b] mb-3">
+                <p className="text-xs text-[#6b7280] mb-3">
                   Upload a JSON attendance export file to merge with existing data
                 </p>
                 <button
                   onClick={handleImportClick}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#232325] hover:bg-white/[0.08] text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-[#f3f4f6] text-[#111827] border border-[#d1d5db] rounded-lg font-medium transition-colors text-xs"
                 >
-                  <IconUpload className="w-4 h-4 text-[#a1a1a6]" />
+                  <IconUpload className="w-4 h-4 text-[#6b7280]" />
                   <span>Choose JSON file</span>
                 </button>
                 <input
@@ -277,16 +277,16 @@ const DataManager = ({ appData, onImport, onClose }) => {
           </div>
 
           {/* Export Section */}
-          <div className="surface-card bg-[#141415] p-4">
-            <h3 className="text-xs font-medium text-[#ededed] mb-1.5">Export backup</h3>
-            <p className="text-xs text-[#85858b] mb-3">
+          <div className="surface-card bg-[#f9fafb] p-4">
+            <h3 className="text-xs font-semibold text-[#111827] mb-1.5">Export backup</h3>
+            <p className="text-xs text-[#6b7280] mb-3">
               Download your calendar records and configuration as a JSON file
             </p>
             <button
               onClick={handleExport}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-[#f3f4f6] text-[#111827] border border-[#d1d5db] rounded-lg font-medium transition-colors text-xs"
             >
-              <IconDownload className="w-4 h-4 text-[#a1a1a6]" />
+              <IconDownload className="w-4 h-4 text-[#6b7280]" />
               <span>Download JSON backup</span>
             </button>
           </div>
@@ -295,7 +295,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="w-full mt-4 px-4 py-2 bg-transparent hover:bg-white/[0.04] text-[#a1a1a6] hover:text-[#ededed] rounded-lg font-medium transition-colors text-xs"
+          className="w-full mt-4 px-4 py-2 bg-transparent hover:bg-[#f3f4f6] text-[#6b7280] hover:text-[#111827] rounded-lg font-medium transition-colors text-xs"
         >
           Close
         </button>

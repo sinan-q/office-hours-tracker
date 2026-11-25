@@ -33,18 +33,22 @@ const CalendarView = ({
     }
   }, [isMenuOpen]);
 
-  // Get first day of month and number of days
-  const firstDay = new Date(year, month, 1).getDay();
+  // Monday-first week offset (0 = Mon, 6 = Sun)
+  const firstDaySunday = new Date(year, month, 1).getDay();
+  const leadingEmptyDays = (firstDaySunday + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-  // Days of the week header
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Days of the week header (Monday - Sunday like 2Office)
+  const weekDaysDesktop = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const weekDaysMobile = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   // Month names
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+  const shortMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   // Get day data from calendarData
   const getDayData = (day) => {
@@ -99,17 +103,23 @@ const CalendarView = ({
   const today = new Date();
   const isCurrentMonth = month === today.getMonth() && year === today.getFullYear();
 
-  // Generate calendar grid
+  // Generate calendar grid (leading prev-month days, current month, trailing next-month days)
   const calendarDays = [];
-  
-  // Add empty cells for days before the first of the month
-  for (let i = 0; i < firstDay; i++) {
+
+  for (let i = leadingEmptyDays - 1; i >= 0; i--) {
+    const prevDay = prevMonthLastDay - i;
     calendarDays.push(
-      <div key={`empty-${i}`} className="min-h-[56px] md:min-h-[72px] rounded-lg bg-transparent"></div>
+      <div
+        key={`prev-${prevDay}`}
+        className="min-h-[68px] md:min-h-[92px] rounded-md bg-[#f8f9fa] border border-[#e5e7eb] p-1.5 flex flex-col justify-between opacity-65 select-none"
+      >
+        <div className="w-7 h-7 rounded bg-[#e5e7eb]/70 text-[#6b7280] flex items-center justify-center text-xs font-mono font-medium">
+          {String(prevDay).padStart(2, '0')}
+        </div>
+      </div>
     );
   }
 
-  // Add cells for each day of the month
   for (let day = 1; day <= daysInMonth; day++) {
     const dayData = getDayData(day);
     const isSelected = selectedDate === dayData.date;
@@ -128,89 +138,148 @@ const CalendarView = ({
     );
   }
 
+  const totalCells = leadingEmptyDays + daysInMonth;
+  const trailingDays = (7 - (totalCells % 7)) % 7;
+  const nextMonthShort = shortMonthNames[(month + 1) % 12];
+  for (let d = 1; d <= trailingDays; d++) {
+    calendarDays.push(
+      <div
+        key={`next-${d}`}
+        className="min-h-[68px] md:min-h-[92px] rounded-md bg-[#f8f9fa] border border-[#e5e7eb] p-1.5 flex flex-col justify-between opacity-65 select-none"
+      >
+        <div className="flex items-center gap-1.5">
+          <div className="w-7 h-7 rounded bg-[#e5e7eb]/70 text-[#6b7280] flex items-center justify-center text-xs font-mono font-medium">
+            {String(d).padStart(2, '0')}
+          </div>
+          {d === 1 && <span className="text-xs text-[#6b7280] hidden sm:inline">{nextMonthShort}</span>}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="surface-card p-3 md:p-4">
-      {/* Header with navigation & overflow menu */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => onNavigate('prev')}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
-            title="Previous month"
-            aria-label="Previous month"
-          >
-            <IconChevronLeft className="w-4 h-4" />
-          </button>
+      {/* Top Bar: My WFO Tab + Month Picker + Legends + Actions */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 mb-3 border-b border-[#e5e7eb]">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-[#3F51BD] border-b-2 border-[#3F51BD] pb-1">
+              My WFO
+            </span>
+          </div>
 
-          <h2 className="text-base md:text-lg font-medium text-[#ededed] tracking-tight tabular-nums px-1">
-            {monthNames[month]} {year}
-          </h2>
+          {/* Month navigation */}
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-[#6b7280] hidden sm:inline mr-1">Month:</span>
+            <button
+              onClick={() => onNavigate('prev')}
+              className="w-7 h-7 flex items-center justify-center rounded-md text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
+              title="Previous month"
+              aria-label="Previous month"
+            >
+              <IconChevronLeft className="w-4 h-4" />
+            </button>
 
-          <button
-            onClick={() => onNavigate('next')}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
-            title="Next month"
-            aria-label="Next month"
-          >
-            <IconChevronRight className="w-4 h-4" />
-          </button>
+            <h2 className="text-sm font-medium text-[#111827] tabular-nums px-1 min-w-[96px] text-center">
+              {shortMonthNames[month]} {year}
+            </h2>
+
+            <button
+              onClick={() => onNavigate('next')}
+              className="w-7 h-7 flex items-center justify-center rounded-md text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
+              title="Next month"
+              aria-label="Next month"
+            >
+              <IconChevronRight className="w-4 h-4" />
+            </button>
+
+            {!isCurrentMonth && (
+              <button
+                onClick={() => onNavigate('today')}
+                className="ml-1 px-2 h-7 flex items-center justify-center rounded-md text-xs font-medium text-[#3F51BD] bg-[#eef2ff] hover:bg-[#e0e7ff] transition-colors"
+                title="Jump to today"
+              >
+                Today
+              </button>
+            )}
+
+            {/* Overflow menu */}
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-7 h-7 flex items-center justify-center rounded-md text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
+                title="More options"
+                aria-label="More options"
+              >
+                <IconMore className="w-4 h-4" />
+              </button>
+
+              {isMenuOpen && (
+                <div className="overflow-menu">
+                  <button
+                    onClick={() => {
+                      onFillRemainingShow();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <IconZap className="w-4 h-4 text-[#16a34a]" />
+                    <span>Mark remaining as Office</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onResetRemaining();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <IconReset className="w-4 h-4 text-[#6b7280]" />
+                    <span>Reset upcoming days</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          {!isCurrentMonth && (
-            <button
-              onClick={() => onNavigate('today')}
-              className="px-2.5 h-8 flex items-center justify-center rounded-lg text-xs font-medium text-[#a1a1a6] hover:text-[#ededed] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-colors"
-              title="Jump to today"
-            >
-              Today
-            </button>
-          )}
-
-          {/* Overflow menu */}
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
-              title="More options"
-              aria-label="More options"
-            >
-              <IconMore className="w-4 h-4" />
-            </button>
-
-            {isMenuOpen && (
-              <div className="overflow-menu">
-                <button
-                  onClick={() => {
-                    onFillRemainingShow();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <IconZap className="w-4 h-4 text-[#4cc38a]" />
-                  <span>Mark remaining as Office</span>
-                </button>
-                <button
-                  onClick={() => {
-                    onResetRemaining();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <IconReset className="w-4 h-4 text-[#a1a1a6]" />
-                  <span>Reset upcoming days</span>
-                </button>
-              </div>
-            )}
+        {/* 2Office Color Legends */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#4b5563]">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-[2px] bg-[#FCC1C1] border border-[#f87171]/40" />
+            <span>Branch Holiday</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-[2px] bg-[#B0EEAE] border border-[#4ade80]/40" />
+            <span>Leave</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-[2px] bg-[#B2DDF9] border border-[#60a5fa]/40" />
+            <span>Comp Off</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-2.5 h-2.5 rounded-[2px] bg-[#FFC488] border border-[#fb923c]/40" />
+            <span>WFO Exception</span>
           </div>
         </div>
       </div>
 
-      {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
-        {weekDays.map((day, i) => (
+      {/* Weekday headers (Desktop: full names, Mobile: short) */}
+      <div className="hidden md:grid grid-cols-7 gap-1.5 mb-1.5">
+        {weekDaysDesktop.map((day, i) => (
           <div
-            key={`${day}-${i}`}
+            key={day}
+            className={`text-left px-1 font-medium py-1 text-xs ${
+              i >= 5 ? 'text-[#9ca3af]' : 'text-[#4b5563]'
+            }`}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+      <div className="grid md:hidden grid-cols-7 gap-1 mb-1">
+        {weekDaysMobile.map((day, i) => (
+          <div
+            key={day}
             className={`text-center font-medium py-0.5 text-xs ${
-              i === 0 || i === 6 ? 'text-[#85858b]/60' : 'text-[#85858b]'
+              i >= 5 ? 'text-[#9ca3af]' : 'text-[#4b5563]'
             }`}
           >
             {day}
@@ -219,7 +288,7 @@ const CalendarView = ({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 md:gap-2">
+      <div className="grid grid-cols-7 gap-1 md:gap-1.5">
         {calendarDays}
       </div>
     </div>

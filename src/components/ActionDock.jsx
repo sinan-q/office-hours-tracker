@@ -176,19 +176,19 @@ const ActionDock = ({
     <div className="w-full p-3">
       {/* Top Header Row: Selected Date + Current Status OR Paint Mode Banner */}
       {paintMode?.active ? (
-        <div className="flex items-center justify-between bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-1.5 mb-2">
+        <div className="flex items-center justify-between bg-[#eef2ff] border border-[#c7d2fe] rounded-lg px-3 py-1.5 mb-2">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#ededed]" />
-            <span className="text-xs font-medium text-[#ededed]">
+            <span className="w-2 h-2 rounded-full bg-[#3F51BD]" />
+            <span className="text-xs font-medium text-[#1e1b4b]">
               Paint: <strong>{paintMode.chip?.label}</strong>
             </span>
-            <span className="text-xs text-[#85858b] hidden sm:inline">
+            <span className="text-xs text-[#4f46e5] hidden sm:inline">
               Tap days to apply · Esc to exit
             </span>
           </div>
           <button
             onClick={onExitPaintMode}
-            className="px-2.5 py-1 bg-white/[0.08] hover:bg-white/[0.12] text-[#ededed] text-xs font-medium rounded transition-colors"
+            className="px-2.5 py-1 bg-[#3F51BD] hover:bg-[#33419c] text-white text-xs font-medium rounded transition-colors"
           >
             Done
           </button>
@@ -196,20 +196,20 @@ const ActionDock = ({
       ) : (
         <div className="flex items-center justify-between mb-2 px-0.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium font-mono text-[#ededed] tabular-nums">
+            <span className="text-xs font-medium font-mono text-[#111827] tabular-nums">
               {formatDateDisplay(selectedDate)}
             </span>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-xs text-[#a1a1a6]">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#f3f4f6] border border-[#e5e7eb] text-xs text-[#4b5563]">
               <span className={`w-1.5 h-1.5 rounded-full ${currentBadge.dot}`} />
               <span>{currentBadge.label}</span>
             </div>
           </div>
           <button
             onClick={() => onOpenDetailedEdit(selectedDate)}
-            className="text-xs font-medium text-[#a1a1a6] hover:text-[#ededed] transition-colors"
+            className="text-xs font-medium text-[#3F51BD] hover:text-[#33419c] transition-colors"
             title="Open editor"
           >
-            Edit
+            Edit details
           </button>
         </div>
       )}
@@ -230,10 +230,10 @@ const ActionDock = ({
               className={`
                 relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors duration-150 select-none
                 ${chip.disabled
-                  ? 'opacity-30 bg-transparent border-white/[0.04] text-[#85858b] cursor-not-allowed'
+                  ? 'opacity-40 bg-[#f9fafb] border-[#e5e7eb] text-[#9ca3af] cursor-not-allowed'
                   : isCurrentActive
-                  ? 'bg-[#ededed] text-[#141415] border-[#ededed]'
-                  : 'bg-[#19191b] hover:bg-white/[0.08] border-white/[0.08] text-[#ededed] active:scale-[0.98]'}
+                  ? 'bg-[#3F51BD] text-white border-[#3F51BD]'
+                  : 'bg-[#f9fafb] hover:bg-[#f3f4f6] border-[#e5e7eb] text-[#1f2937] active:scale-[0.98]'}
               `}
               title={
                 chip.disabled
@@ -247,7 +247,7 @@ const ActionDock = ({
               <span>{chip.label}</span>
               {chip.badge !== null && (
                 <span className={`text-[11px] font-mono tabular-nums ${
-                  isCurrentActive ? 'text-[#141415]/70' : 'text-[#85858b]'
+                  isCurrentActive ? 'text-white/80' : 'text-[#6b7280]'
                 }`}>
                   {chip.badge}
                 </span>

@@ -78,18 +78,18 @@ const Settings = ({ settings, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0f0f10]/75 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#111827]/45 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#19191b] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto border border-white/[0.08]"
+        className="bg-white rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto border border-[#e5e7eb] shadow-xl text-[#111827]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sm:hidden drawer-handle mb-3" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-medium text-[#ededed]">Settings</h2>
+          <h2 className="text-base font-semibold text-[#111827]">Settings</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#85858b] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-lg text-[#6b7280] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors"
             aria-label="Close"
           >
             <IconClose className="w-4 h-4" />
@@ -97,13 +97,13 @@ const Settings = ({ settings, onSave, onClose }) => {
         </div>
 
         {/* Section 1: Office Hours & Attendance */}
-        <div className="surface-card bg-[#141415] p-4 mb-4">
-          <h3 className="text-xs font-medium text-[#ededed] mb-3">
+        <div className="surface-card bg-[#f9fafb] p-4 mb-4">
+          <h3 className="text-xs font-semibold text-[#111827] mb-3">
             Office hours and attendance
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] text-[#a1a1a6] mb-1">
+              <label className="block text-xs text-[#4b5563] mb-1">
                 Minimum hours per day (minutes)
               </label>
               <input
@@ -112,15 +112,15 @@ const Settings = ({ settings, onSave, onClose }) => {
                 onChange={(e) => setMinHoursPerDay(e.target.value)}
                 min="0"
                 max="1440"
-                className="w-full px-3 py-2 bg-[#1a1e28] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 text-xs tabular-nums"
+                className="w-full px-3 py-2 bg-white border border-[#d1d5db] text-[#111827] rounded-lg focus:outline-none focus:border-[#3F51BD] text-xs font-mono tabular-nums"
               />
-              <p className="text-[11px] text-[#7a8296] mt-1 tabular-nums">
+              <p className="text-xs text-[#6b7280] mt-1 tabular-nums">
                 {Math.floor(minHoursPerDay / 60)}h {minHoursPerDay % 60}m daily requirement
               </p>
             </div>
 
             <div>
-              <label className="block text-[11px] text-[#a1a1a6] mb-1">
+              <label className="block text-xs text-[#4b5563] mb-1">
                 Minimum attendance target (%)
               </label>
               <input
@@ -129,9 +129,9 @@ const Settings = ({ settings, onSave, onClose }) => {
                 onChange={(e) => setMinAttendancePercentage(e.target.value)}
                 min="0"
                 max="100"
-                className="w-full px-3 py-2 bg-[#1a1e28] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 text-xs tabular-nums"
+                className="w-full px-3 py-2 bg-white border border-[#d1d5db] text-[#111827] rounded-lg focus:outline-none focus:border-[#3F51BD] text-xs font-mono tabular-nums"
               />
-              <p className="text-[11px] text-[#7a8296] mt-1 tabular-nums">
+              <p className="text-xs text-[#6b7280] mt-1 tabular-nums">
                 {minAttendancePercentage}% monthly target
               </p>
             </div>
@@ -260,13 +260,13 @@ const Settings = ({ settings, onSave, onClose }) => {
         <div className="flex gap-2">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-[#ededed] hover:bg-white text-[#0f1115] rounded-lg font-medium transition-colors text-xs"
+            className="flex-1 px-4 py-2 bg-[#3F51BD] hover:bg-[#33419c] text-white rounded-lg font-medium transition-colors text-xs"
           >
             Save settings
           </button>
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-[#a1a1a6] hover:text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
+            className="flex-1 px-4 py-2 bg-[#f9fafb] hover:bg-[#f3f4f6] text-[#4b5563] hover:text-[#111827] border border-[#d1d5db] rounded-lg font-medium transition-colors text-xs"
           >
             Cancel
           </button>

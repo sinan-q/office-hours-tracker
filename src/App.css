@@ -1,5 +1,5 @@
 #root {
-  max-width: 880px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0;
   text-align: left;
@@ -10,17 +10,46 @@
   min-height: 100dvh;
 }
 
-/* Card surfaces - Graphite ramp */
+/* Card surfaces - 2Office light theme */
 .surface-card {
-  background-color: #19191b;
-  border: 1px solid rgba(237, 237, 237, 0.08);
-  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .surface-raised {
-  background-color: #232325;
-  border: 1px solid rgba(237, 237, 237, 0.08);
-  border-radius: 14px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Circular progress ring for WFO Index */
+.progress-ring {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.progress-ring::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.progress-value {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1f2937;
 }
 
 /* Fixed action dock at bottom on mobile */
@@ -31,8 +60,9 @@
   right: 0;
   z-index: 40;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background-color: #0f0f10;
-  border-top: 1px solid rgba(237, 237, 237, 0.08);
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* Stats drawer overlay */
@@ -40,7 +70,7 @@
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgba(15, 15, 16, 0.72);
+  background: rgba(17, 24, 39, 0.45);
   animation: fade-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -55,8 +85,8 @@
   max-height: 85dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background-color: #19191b;
-  border-top: 1px solid rgba(237, 237, 237, 0.1);
+  background-color: #ffffff;
+  border-top: 1px solid #e5e7eb;
   border-radius: 16px 16px 0 0;
   animation: slide-up 220ms cubic-bezier(0.22, 1, 0.36, 1);
   padding-bottom: env(safe-area-inset-bottom, 16px);
@@ -66,7 +96,7 @@
 .drawer-handle {
   width: 32px;
   height: 4px;
-  background: rgba(237, 237, 237, 0.16);
+  background: #d1d5db;
   border-radius: 2px;
   margin: 12px auto 4px;
 }
@@ -78,10 +108,10 @@
   top: calc(100% + 4px);
   z-index: 30;
   min-width: 196px;
-  background-color: #19191b;
-  border: 1px solid rgba(237, 237, 237, 0.1);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   padding: 4px;
   animation: fade-in 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -94,7 +124,7 @@
   padding: 8px 12px;
   border: none;
   background: transparent;
-  color: #a1a1a6;
+  color: #4b5563;
   font-size: 13px;
   font-family: inherit;
   border-radius: 6px;
@@ -104,8 +134,8 @@
 }
 
 .overflow-menu button:hover {
-  background-color: rgba(237, 237, 237, 0.06);
-  color: #ededed;
+  background-color: #f3f4f6;
+  color: #111827;
 }
 
 /* Animations */
@@ -129,19 +159,19 @@
 
 /* Status dot */
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
 }
 
 .status-dot--online {
-  background-color: #34d399;
+  background-color: #16a34a;
 }
 
 .status-dot--local {
-  background-color: #f59e0b;
+  background-color: #d97706;
 }
 
 /* Prevent body scroll when drawer is open */
