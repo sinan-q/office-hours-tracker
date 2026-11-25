@@ -71,8 +71,68 @@ function App() {
     return () => document.body.classList.remove('drawer-open');
   }, [isStatsDrawerOpen]);
 
+  // Keyboard navigation & Escape handling
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (isModalOpen) {
+          setIsModalOpen(false);
+          setSelectedDay(null);
+        } else if (isSettingsOpen) {
+          setIsSettingsOpen(false);
+        } else if (isDataManagerOpen) {
+          setIsDataManagerOpen(false);
+        } else if (isStatsDrawerOpen) {
+          setIsStatsDrawerOpen(false);
+        } else if (isHeaderMenuOpen) {
+          setIsHeaderMenuOpen(false);
+        } else if (paintMode.active) {
+          setPaintMode({ active: false, chip: null });
+        }
+        return;
+      }
+
+      // Skip day navigation when modals/drawers are open or typing in inputs
+      if (isModalOpen || isSettingsOpen || isDataManagerOpen || isStatsDrawerOpen) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      const dayDeltas = {
+        ArrowLeft: -1,
+        ArrowRight: 1,
+        ArrowUp: -7,
+        ArrowDown: 7
+      };
+
+      if (dayDeltas[e.key] !== undefined && selectedDate) {
+        e.preventDefault();
+        const [y, m, d] = selectedDate.split('-').map(Number);
+        const next = new Date(y, m - 1, d + dayDeltas[e.key]);
+        const nextStr = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+        setSelectedDate(nextStr);
+        if (next.getMonth() !== currentDate.getMonth() || next.getFullYear() !== currentDate.getFullYear()) {
+          setCurrentDate(new Date(next.getFullYear(), next.getMonth(), 1));
+        }
+      } else if (e.key === 'Enter' && document.activeElement === document.body && selectedDate) {
+        e.preventDefault();
+        setSelectedDay(selectedDate);
+        setIsModalOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen, isSettingsOpen, isDataManagerOpen, isStatsDrawerOpen, isHeaderMenuOpen, paintMode.active, selectedDate, currentDate]);
+
   // Navigation handlers
   const handleNavigate = (direction) => {
+    if (direction === 'today') {
+      const now = new Date();
+      setCurrentDate(now);
+      setSelectedDate(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`);
+      return;
+    }
+
     setCurrentDate((prevDate) => {
       const newDate = new Date(prevDate);
       if (direction === 'prev') {
@@ -600,7 +660,7 @@ function App() {
       {/* Compact Header */}
       <header className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h1 className="text-base font-semibold text-[#ededed] tracking-tight">
+          <h1 className="text-base font-medium text-[#ededed] tracking-tight">
             Office Hours
           </h1>
           <span

@@ -87,10 +87,19 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
     }
   };
 
-  const handleTimeChange = (e) => {
-    const newTime = e.target.value;
-    setTime(newTime);
-    if (status === 'EMPTY' && parseInt(newTime) > 0) {
+  const handleHoursMinutesChange = (newHours, newMinutes) => {
+    const h = Math.max(0, Math.min(24, parseInt(newHours) || 0));
+    const m = Math.max(0, Math.min(59, parseInt(newMinutes) || 0));
+    const total = Math.min(1440, h * 60 + m);
+    setTime(total);
+    if (status === 'EMPTY' && total > 0) {
+      setStatus('SHOW');
+    }
+  };
+
+  const applyTimePreset = (minutes) => {
+    setTime(minutes);
+    if (status === 'EMPTY' && minutes > 0) {
       setStatus('SHOW');
     }
   };
@@ -119,18 +128,18 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#0f0f10]/75 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#141720] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-md shadow-2xl border border-white/[0.08] max-h-[90vh] max-h-[90dvh] overflow-y-auto"
+        className="bg-[#19191b] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-md border border-white/[0.08] max-h-[90vh] max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sm:hidden drawer-handle mb-3" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[#ededed]">Edit day</h2>
+          <h2 className="text-base font-medium text-[#ededed]">Edit day</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#7a8296] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-lg text-[#85858b] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
             aria-label="Close"
           >
             <IconClose className="w-4 h-4" />
@@ -138,7 +147,7 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
         </div>
         
         {/* Date Display */}
-        <div className="mb-4 surface-card p-3">
+        <div className="mb-4 surface-card bg-[#141415] p-3">
           <p className="text-sm font-medium text-[#ededed] tabular-nums">{formatDate(dayData.date)}</p>
           {isHistorical && status === 'LEAVE' && (
             <p className="text-xs text-[#f59e0b] mt-1">
@@ -352,37 +361,77 @@ const DayEditModal = ({ dayData, leaveBalances, asOfDate, calendarData, compOffS
           </div>
         )}
 
-        {/* Time Input */}
+        {/* Time Input (Hours & Minutes + Presets) */}
         <div className="mb-5">
-          <label className="block text-xs text-[#a1a1a6] mb-1.5">
-            Time (minutes)
-          </label>
-          <input
-            type="number"
-            value={time}
-            onChange={handleTimeChange}
-            disabled={isTimeDisabled()}
-            min="0"
-            max="1440"
-            className={`
-              w-full px-3 py-2 rounded-lg focus:outline-none focus:border-white/30 text-xs tabular-nums
-              ${isTimeDisabled() 
-                ? 'bg-transparent text-[#7a8296] cursor-not-allowed border border-white/[0.04]' 
-                : 'bg-[#1a1e28] text-[#ededed] border border-white/[0.08]'}
-            `}
-          />
-          {!isTimeDisabled() && (
-            <p className="text-[11px] text-[#7a8296] mt-1 tabular-nums">
-              {Math.floor(time / 60)}h {time % 60}m
-            </p>
-          )}
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs text-[#a1a1a6]">
+              Time logged
+            </label>
+            {!isTimeDisabled() && (
+              <div className="flex items-center gap-1">
+                {[300, 360, 480, 540].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => applyTimePreset(preset)}
+                    className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors border ${
+                      parseInt(time) === preset
+                        ? 'bg-white/[0.12] text-[#ededed] border-white/20'
+                        : 'bg-[#141415] text-[#85858b] hover:text-[#ededed] border-white/[0.06]'
+                    }`}
+                  >
+                    {preset / 60}h
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="relative">
+              <input
+                type="number"
+                value={Math.floor((parseInt(time) || 0) / 60)}
+                onChange={(e) => handleHoursMinutesChange(e.target.value, (parseInt(time) || 0) % 60)}
+                disabled={isTimeDisabled()}
+                min="0"
+                max="24"
+                aria-label="Hours"
+                className={`
+                  w-full px-3 py-2 pr-8 rounded-lg focus:outline-none focus:border-white/30 text-xs font-mono tabular-nums
+                  ${isTimeDisabled()
+                    ? 'bg-transparent text-[#85858b] cursor-not-allowed border border-white/[0.04]'
+                    : 'bg-[#232325] text-[#ededed] border border-white/[0.08]'}
+                `}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#85858b] pointer-events-none">h</span>
+            </div>
+            <div className="relative">
+              <input
+                type="number"
+                value={(parseInt(time) || 0) % 60}
+                onChange={(e) => handleHoursMinutesChange(Math.floor((parseInt(time) || 0) / 60), e.target.value)}
+                disabled={isTimeDisabled()}
+                min="0"
+                max="59"
+                aria-label="Minutes"
+                className={`
+                  w-full px-3 py-2 pr-8 rounded-lg focus:outline-none focus:border-white/30 text-xs font-mono tabular-nums
+                  ${isTimeDisabled()
+                    ? 'bg-transparent text-[#85858b] cursor-not-allowed border border-white/[0.04]'
+                    : 'bg-[#232325] text-[#ededed] border border-white/[0.08]'}
+                `}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#85858b] pointer-events-none">m</span>
+            </div>
+          </div>
         </div>
 
         {/* Buttons */}
         <div className="flex gap-2">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2 bg-[#ededed] hover:bg-white text-[#0f1115] rounded-lg font-medium transition-colors text-xs"
+            className="flex-1 px-4 py-2 bg-[#ededed] hover:bg-white text-[#141415] rounded-lg font-medium transition-colors text-xs"
           >
             Save
           </button>

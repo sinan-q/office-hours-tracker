@@ -88,7 +88,7 @@ const ActionDock = ({
     }
   };
 
-  // Chips configuration with live balances
+  // Chips configuration with live balances (restrained semantic palette)
   const chips = [
     {
       id: 'SHOW',
@@ -103,7 +103,7 @@ const ActionDock = ({
       type: 'EXCEPTION',
       exceptionCategory: 'PE',
       label: 'WFH',
-      dotColor: 'bg-[#ea580c]',
+      dotColor: 'bg-[#fb923c]',
       disabled: (exceptionStats?.available ?? 0) <= 0,
       badge: `${exceptionStats?.available ?? 0}`
     },
@@ -121,7 +121,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'SL',
       label: 'SL',
-      dotColor: 'bg-[#eab308]',
+      dotColor: 'bg-[#f59e0b]',
       disabled: (leaveBalances?.SL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.SL?.available ?? 0}`
     },
@@ -130,7 +130,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'CL',
       label: 'CL',
-      dotColor: 'bg-[#f43f5e]',
+      dotColor: 'bg-[#f59e0b]',
       disabled: (leaveBalances?.CL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.CL?.available ?? 0}`
     },
@@ -139,7 +139,7 @@ const ActionDock = ({
       type: 'LEAVE',
       leaveCategory: 'FL',
       label: 'FL',
-      dotColor: 'bg-[#14b8a6]',
+      dotColor: 'bg-[#f59e0b]',
       disabled: (leaveBalances?.FL?.available ?? 0) <= 0,
       badge: `${leaveBalances?.FL?.available ?? 0}`
     },
@@ -173,7 +173,7 @@ const ActionDock = ({
   const currentBadge = getCurrentStatusBadge();
 
   return (
-    <div className="w-full p-2.5 md:p-3">
+    <div className="w-full p-3">
       {/* Top Header Row: Selected Date + Current Status OR Paint Mode Banner */}
       {paintMode?.active ? (
         <div className="flex items-center justify-between bg-white/[0.04] border border-white/[0.1] rounded-lg px-3 py-1.5 mb-2">
@@ -182,8 +182,8 @@ const ActionDock = ({
             <span className="text-xs font-medium text-[#ededed]">
               Paint: <strong>{paintMode.chip?.label}</strong>
             </span>
-            <span className="text-[11px] text-[#7a8296] hidden sm:inline">
-              Tap days to apply
+            <span className="text-xs text-[#85858b] hidden sm:inline">
+              Tap days to apply · Esc to exit
             </span>
           </div>
           <button
@@ -196,7 +196,7 @@ const ActionDock = ({
       ) : (
         <div className="flex items-center justify-between mb-2 px-0.5">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-[#ededed] tabular-nums">
+            <span className="text-xs font-medium font-mono text-[#ededed] tabular-nums">
               {formatDateDisplay(selectedDate)}
             </span>
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-xs text-[#a1a1a6]">
@@ -215,7 +215,7 @@ const ActionDock = ({
       )}
 
       {/* Action Chips Grid */}
-      <div className="flex flex-wrap gap-1 md:gap-1.5 justify-center">
+      <div className="flex flex-wrap gap-1.5 justify-center">
         {chips.map((chip) => {
           const isCurrentActive = paintMode?.active && paintMode?.chip?.id === chip.id;
 
@@ -228,12 +228,12 @@ const ActionDock = ({
               onPointerLeave={handlePointerUp}
               disabled={chip.disabled}
               className={`
-                relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors select-none
+                relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors duration-150 select-none
                 ${chip.disabled
-                  ? 'opacity-30 bg-transparent border-white/[0.04] text-[#7a8296] cursor-not-allowed'
+                  ? 'opacity-30 bg-transparent border-white/[0.04] text-[#85858b] cursor-not-allowed'
                   : isCurrentActive
-                  ? 'bg-[#ededed] text-[#0f1115] border-[#ededed]'
-                  : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.08] text-[#ededed] active:scale-[0.98]'}
+                  ? 'bg-[#ededed] text-[#141415] border-[#ededed]'
+                  : 'bg-[#19191b] hover:bg-white/[0.08] border-white/[0.08] text-[#ededed] active:scale-[0.98]'}
               `}
               title={
                 chip.disabled
@@ -246,8 +246,8 @@ const ActionDock = ({
               )}
               <span>{chip.label}</span>
               {chip.badge !== null && (
-                <span className={`text-[10px] font-mono tabular-nums ${
-                  isCurrentActive ? 'text-[#0f1115]/70' : 'text-[#7a8296]'
+                <span className={`text-[11px] font-mono tabular-nums ${
+                  isCurrentActive ? 'text-[#141415]/70' : 'text-[#85858b]'
                 }`}>
                   {chip.badge}
                 </span>

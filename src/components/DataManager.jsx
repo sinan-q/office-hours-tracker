@@ -8,6 +8,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
   const [pastedJson, setPastedJson] = useState('');
   const [importMethod, setImportMethod] = useState('paste');
   const [pendingImport, setPendingImport] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleExport = () => {
     getData().then((data) => {
@@ -104,16 +105,18 @@ const DataManager = ({ appData, onImport, onClose }) => {
       onImport(updatedData);
       setPendingImport(null);
       setPastedJson('');
+      setErrorMessage('');
       onClose();
     } catch (error) {
       console.error('Error importing JSON:', error);
-      alert('Error importing JSON: ' + error.message);
+      setErrorMessage(error.message || 'Failed to import JSON');
     }
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setErrorMessage('');
 
     try {
       const text = await file.text();
@@ -123,7 +126,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
       const isExportFormat = !isArray && jsonData.settings && jsonData.calendarData;
 
       if (!isArray && !isExportFormat) {
-        throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
+        throw new Error('Invalid JSON format. Expected company array or exported backup object');
       }
 
       const hasUpcoming = checkHasUpcomingDays(jsonData, appData?.calendarData);
@@ -134,7 +137,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
       }
     } catch (error) {
       console.error('Error importing JSON:', error);
-      alert('Error importing JSON: ' + error.message);
+      setErrorMessage(error.message || 'Failed to parse JSON file');
     }
 
     if (fileInputRef.current) {
@@ -143,8 +146,9 @@ const DataManager = ({ appData, onImport, onClose }) => {
   };
 
   const handlePasteImport = async () => {
+    setErrorMessage('');
     if (!pastedJson.trim()) {
-      alert('Please paste JSON data first.');
+      setErrorMessage('Paste JSON data before importing');
       return;
     }
 
@@ -155,7 +159,7 @@ const DataManager = ({ appData, onImport, onClose }) => {
       const isExportFormat = !isArray && jsonData.settings && jsonData.calendarData;
 
       if (!isArray && !isExportFormat) {
-        throw new Error('Invalid JSON format. Expected company format (array) or exported format (object with settings and calendarData).');
+        throw new Error('Invalid JSON format. Expected company array or exported backup object');
       }
 
       const hasUpcoming = checkHasUpcomingDays(jsonData, appData?.calendarData);
@@ -166,52 +170,61 @@ const DataManager = ({ appData, onImport, onClose }) => {
       }
     } catch (error) {
       console.error('Error parsing pasted JSON:', error);
-      alert('Error parsing JSON: ' + error.message);
+      setErrorMessage(error.message || 'Invalid JSON syntax');
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#0f0f10]/75 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#141720] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto shadow-2xl border border-white/[0.08]"
+        className="bg-[#19191b] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto border border-white/[0.08]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sm:hidden drawer-handle mb-3" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[#ededed]">Data management</h2>
+          <h2 className="text-base font-medium text-[#ededed]">Data management</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#7a8296] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-lg text-[#85858b] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
             aria-label="Close"
           >
             <IconClose className="w-4 h-4" />
           </button>
         </div>
 
+        {errorMessage && (
+          <div
+            role="alert"
+            className="mb-4 px-3 py-2.5 rounded-lg bg-[#e5484d]/10 border border-[#e5484d]/25 text-xs text-[#e5484d]"
+          >
+            {errorMessage}
+          </div>
+        )}
+
         <div className="space-y-4">
           {/* Import Section */}
-          <div className="surface-card p-4">
+          <div className="surface-card bg-[#141415] p-4">
             <h3 className="text-xs font-medium text-[#ededed] mb-3">Import attendance data</h3>
             
             {/* Import Method Toggle */}
-            <div className="flex gap-1 mb-3 bg-[#0f1117] p-1 rounded-lg border border-white/[0.06]">
+            <div className="flex gap-1 mb-3 bg-[#19191b] p-1 rounded-lg border border-white/[0.06]">
               <button
-                onClick={() => setImportMethod('paste')}
+                onClick={() => { setImportMethod('paste'); setErrorMessage(''); }}
                 className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   importMethod === 'paste'
-                    ? 'bg-[#1a1e28] text-[#ededed] shadow-sm'
-                    : 'text-[#7a8296] hover:text-[#ededed]'
+                    ? 'bg-[#232325] text-[#ededed]'
+                    : 'text-[#85858b] hover:text-[#ededed]'
                 }`}
               >
                 Paste JSON
               </button>
               <button
-                onClick={() => setImportMethod('file')}
+                onClick={() => { setImportMethod('file'); setErrorMessage(''); }}
                 className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   importMethod === 'file'
-                    ? 'bg-[#1a1e28] text-[#ededed] shadow-sm'
-                    : 'text-[#7a8296] hover:text-[#ededed]'
+                    ? 'bg-[#232325] text-[#ededed]'
+                    : 'text-[#85858b] hover:text-[#ededed]'
                 }`}
               >
                 Upload file
@@ -221,18 +234,18 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* Paste JSON Method */}
             {importMethod === 'paste' && (
               <div>
-                <p className="text-[11px] text-[#7a8296] mb-2">
-                  Paste attendance records array or previous exported backup.
+                <p className="text-xs text-[#85858b] mb-2">
+                  Paste attendance records array or exported backup
                 </p>
                 <textarea
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
-                  placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","date":"2025-09-18"}, ...]'
-                  className="w-full px-3 py-2 bg-[#1a1e28] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 font-mono text-xs min-h-[110px] resize-y placeholder:text-[#7a8296]/40"
+                  placeholder='[{"swipeDtls":[{"timeSpentCategory":"3-5"}],"dayStatus":"At Office","date":"2025-09-18"}]'
+                  className="w-full px-3 py-2 bg-[#232325] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 font-mono text-xs min-h-[110px] resize-y placeholder:text-[#85858b]/50"
                 />
                 <button
                   onClick={handlePasteImport}
-                  className="w-full mt-2.5 px-4 py-2 bg-[#ededed] hover:bg-white text-[#0f1115] rounded-lg font-medium transition-colors text-xs"
+                  className="w-full mt-2.5 px-4 py-2 bg-[#ededed] hover:bg-white text-[#141415] rounded-lg font-medium transition-colors text-xs"
                 >
                   Import data
                 </button>
@@ -242,12 +255,12 @@ const DataManager = ({ appData, onImport, onClose }) => {
             {/* File Upload Method */}
             {importMethod === 'file' && (
               <div>
-                <p className="text-[11px] text-[#7a8296] mb-3">
-                  Upload a JSON attendance export file to merge with existing data.
+                <p className="text-xs text-[#85858b] mb-3">
+                  Upload a JSON attendance export file to merge with existing data
                 </p>
                 <button
                   onClick={handleImportClick}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1a1e28] hover:bg-white/[0.08] text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#232325] hover:bg-white/[0.08] text-[#ededed] border border-white/[0.08] rounded-lg font-medium transition-colors text-xs"
                 >
                   <IconUpload className="w-4 h-4 text-[#a1a1a6]" />
                   <span>Choose JSON file</span>
@@ -264,10 +277,10 @@ const DataManager = ({ appData, onImport, onClose }) => {
           </div>
 
           {/* Export Section */}
-          <div className="surface-card p-4">
+          <div className="surface-card bg-[#141415] p-4">
             <h3 className="text-xs font-medium text-[#ededed] mb-1.5">Export backup</h3>
-            <p className="text-[11px] text-[#7a8296] mb-3">
-              Download your calendar records and configuration as a JSON file.
+            <p className="text-xs text-[#85858b] mb-3">
+              Download your calendar records and configuration as a JSON file
             </p>
             <button
               onClick={handleExport}

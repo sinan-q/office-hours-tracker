@@ -78,18 +78,18 @@ const Settings = ({ settings, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-[#0f0f10]/75 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-[#141720] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto shadow-2xl border border-white/[0.08]"
+        className="bg-[#19191b] rounded-t-2xl sm:rounded-2xl p-5 md:p-6 w-full sm:max-w-xl max-h-[92vh] max-h-[92dvh] overflow-y-auto border border-white/[0.08]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sm:hidden drawer-handle mb-3" />
 
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[#ededed]">Settings</h2>
+          <h2 className="text-base font-medium text-[#ededed]">Settings</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#7a8296] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-lg text-[#85858b] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
             aria-label="Close"
           >
             <IconClose className="w-4 h-4" />
@@ -97,7 +97,7 @@ const Settings = ({ settings, onSave, onClose }) => {
         </div>
 
         {/* Section 1: Office Hours & Attendance */}
-        <div className="surface-card p-4 mb-4">
+        <div className="surface-card bg-[#141415] p-4 mb-4">
           <h3 className="text-xs font-medium text-[#ededed] mb-3">
             Office hours and attendance
           </h3>
@@ -150,17 +150,17 @@ const Settings = ({ settings, onSave, onClose }) => {
           </div>
 
           {/* Baseline Date */}
-          <div className="mb-3 bg-white/[0.03] p-3 rounded-lg border border-white/[0.06]">
-            <label className="block text-[11px] text-[#a1a1a6] mb-1">
-              Starting balances as of date:
+          <div className="mb-3 bg-[#19191b] p-3 rounded-lg border border-white/[0.06]">
+            <label className="block text-xs text-[#a1a1a6] mb-1">
+              Starting balances as of date
             </label>
             <input
               type="date"
               value={asOfDate}
               onChange={(e) => setAsOfDate(e.target.value)}
-              className="w-full sm:w-auto px-3 py-1.5 bg-[#1a1e28] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 text-xs tabular-nums"
+              className="w-full sm:w-auto px-3 py-1.5 bg-[#232325] border border-white/[0.08] text-[#ededed] rounded-lg focus:outline-none focus:border-white/30 text-xs font-mono tabular-nums"
             />
-            <p className="text-[11px] text-[#7a8296] mt-1">
+            <p className="text-xs text-[#85858b] mt-1.5">
               Leaves on or before this date are accounted for. Only subsequent leaves deduct from available balance.
             </p>
           </div>

@@ -28,52 +28,52 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
     lastTapTime.current = now;
   }, [isSelected, isPaintMode, onClick, onEdit]);
 
-  // Restrained semantic status styling from the direction
+  // Quiet Graphite surface styling — status carries via the bottom stamp
   const getCellTheme = () => {
-    // Special case: WEEKEND or HOLIDAY with time logged
+    // Weekend or Holiday with logged time (no purple slop)
     if ((status === 'WEEKEND' || status === 'HOLIDAY') && time && time > 0) {
       return {
-        bg: 'bg-[#1b172a] border-[#382b52]',
-        badgeBg: 'bg-[#291f42] text-[#c4b5fd]'
+        bg: 'bg-[#1a1d1b] border-[#4cc38a]/25',
+        badgeBg: 'bg-[#4cc38a]/15 text-[#4cc38a]'
       };
     }
 
     switch (status) {
       case 'SHOW':
         return {
-          bg: 'bg-[#121c17] border-[#1d3527]',
-          badgeBg: 'bg-[#193223] text-[#6ee7b7]'
+          bg: 'bg-[#161c18] border-[#4cc38a]/20',
+          badgeBg: 'bg-[#4cc38a]/15 text-[#4cc38a]'
         };
       case 'NO SHOW':
         return {
-          bg: 'bg-[#211417] border-[#3f1e24]',
-          badgeBg: 'bg-[#3b171f] text-[#fca5a5]'
+          bg: 'bg-[#1c1617] border-[#e5484d]/20',
+          badgeBg: 'bg-[#e5484d]/15 text-[#e5484d]'
         };
       case 'LEAVE':
         return {
-          bg: 'bg-[#211b13] border-[#3d2e18]',
-          badgeBg: 'bg-[#352512] text-[#fcd34d]'
+          bg: 'bg-[#1c1a16] border-[#f59e0b]/20',
+          badgeBg: 'bg-[#f59e0b]/15 text-[#f59e0b]'
         };
       case 'EXCEPTION':
         return {
-          bg: 'bg-[#211812] border-[#3d2716]',
-          badgeBg: 'bg-[#382012] text-[#fdba74]'
+          bg: 'bg-[#1c1816] border-[#ea580c]/20',
+          badgeBg: 'bg-[#ea580c]/15 text-[#fb923c]'
         };
       case 'HOLIDAY':
         return {
-          bg: 'bg-[#141b27] border-[#1f2d42]',
-          badgeBg: 'bg-[#1b2b43] text-[#93c5fd]'
+          bg: 'bg-[#16191e] border-[#38bdf8]/20',
+          badgeBg: 'bg-[#38bdf8]/15 text-[#7dd3fc]'
         };
       case 'WEEKEND':
         return {
-          bg: 'bg-[#0f1117] border-white/[0.03]',
-          badgeBg: 'bg-white/[0.04] text-[#a1a1a6]'
+          bg: 'bg-[#141415] border-white/[0.04]',
+          badgeBg: 'bg-white/[0.05] text-[#a1a1a6]'
         };
       case 'EMPTY':
       default:
         return {
-          bg: 'bg-[#141720] border-white/[0.05]',
-          badgeBg: 'bg-white/[0.04] text-[#7a8296]'
+          bg: 'bg-[#19191b] border-white/[0.06]',
+          badgeBg: 'bg-white/[0.05] text-[#85858b]'
         };
     }
   };
@@ -153,10 +153,10 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
         ${theme.bg}
         border
         ${isSelected
-          ? 'ring-1 ring-[#ededed] border-white/20 z-10'
-          : (isToday ? 'ring-1 ring-white/30' : '')}
+          ? 'ring-1 ring-[#ededed] border-[#ededed]/30 z-10'
+          : (isToday ? 'ring-1 ring-white/25' : '')}
         ${isPaintMode ? 'cursor-crosshair' : 'cursor-pointer'}
-        p-1 md:p-1.5 min-h-[52px] md:min-h-[68px] rounded-lg
+        p-1 md:p-1.5 min-h-[56px] md:min-h-[72px] rounded-lg
         transition-colors duration-150 select-none
         flex flex-col justify-between
         relative
@@ -169,8 +169,8 @@ const DayCell = ({ dayData, isToday, isSelected = false, isPaintMode = false, on
         ) : (
           <span />
         )}
-        <span className={`text-[11px] md:text-xs font-medium tabular-nums ${
-          status === 'EMPTY' || status === 'WEEKEND' ? 'text-[#7a8296]' : 'text-[#ededed]'
+        <span className={`text-xs font-medium font-mono tabular-nums ${
+          status === 'EMPTY' || status === 'WEEKEND' ? 'text-[#85858b]' : 'text-[#ededed]'
         }`}>
           {dayNumber}
         </span>

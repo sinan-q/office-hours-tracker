@@ -96,13 +96,16 @@ const CalendarView = ({
     );
   };
 
+  const today = new Date();
+  const isCurrentMonth = month === today.getMonth() && year === today.getFullYear();
+
   // Generate calendar grid
   const calendarDays = [];
   
   // Add empty cells for days before the first of the month
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className="min-h-[52px] md:min-h-[68px] rounded-lg bg-transparent"></div>
+      <div key={`empty-${i}`} className="min-h-[56px] md:min-h-[72px] rounded-lg bg-transparent"></div>
     );
   }
 
@@ -129,20 +132,20 @@ const CalendarView = ({
     <div className="surface-card p-3 md:p-4">
       {/* Header with navigation & overflow menu */}
       <div className="flex items-center justify-between mb-3">
-        <button
-          onClick={() => onNavigate('prev')}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
-          title="Previous month"
-          aria-label="Previous month"
-        >
-          <IconChevronLeft className="w-4 h-4" />
-        </button>
-
-        <h2 className="text-base md:text-lg font-semibold text-[#ededed] tracking-tight tabular-nums">
-          {monthNames[month]} {year}
-        </h2>
-
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => onNavigate('prev')}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
+            title="Previous month"
+            aria-label="Previous month"
+          >
+            <IconChevronLeft className="w-4 h-4" />
+          </button>
+
+          <h2 className="text-base md:text-lg font-medium text-[#ededed] tracking-tight tabular-nums px-1">
+            {monthNames[month]} {year}
+          </h2>
+
           <button
             onClick={() => onNavigate('next')}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-[#a1a1a6] hover:text-[#ededed] hover:bg-white/[0.06] transition-colors"
@@ -151,6 +154,18 @@ const CalendarView = ({
           >
             <IconChevronRight className="w-4 h-4" />
           </button>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {!isCurrentMonth && (
+            <button
+              onClick={() => onNavigate('today')}
+              className="px-2.5 h-8 flex items-center justify-center rounded-lg text-xs font-medium text-[#a1a1a6] hover:text-[#ededed] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-colors"
+              title="Jump to today"
+            >
+              Today
+            </button>
+          )}
 
           {/* Overflow menu */}
           <div className="relative" ref={menuRef}>
@@ -171,7 +186,7 @@ const CalendarView = ({
                     setIsMenuOpen(false);
                   }}
                 >
-                  <IconZap className="w-3.5 h-3.5 text-[#4cc38a]" />
+                  <IconZap className="w-4 h-4 text-[#4cc38a]" />
                   <span>Mark remaining as Office</span>
                 </button>
                 <button
@@ -180,7 +195,7 @@ const CalendarView = ({
                     setIsMenuOpen(false);
                   }}
                 >
-                  <IconReset className="w-3.5 h-3.5 text-[#a1a1a6]" />
+                  <IconReset className="w-4 h-4 text-[#a1a1a6]" />
                   <span>Reset upcoming days</span>
                 </button>
               </div>
@@ -190,12 +205,12 @@ const CalendarView = ({
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 md:gap-1.5 mb-1.5">
+      <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
         {weekDays.map((day, i) => (
           <div
             key={`${day}-${i}`}
-            className={`text-center font-medium py-0.5 text-[11px] ${
-              i === 0 || i === 6 ? 'text-[#7a8296]/60' : 'text-[#7a8296]'
+            className={`text-center font-medium py-0.5 text-xs ${
+              i === 0 || i === 6 ? 'text-[#85858b]/60' : 'text-[#85858b]'
             }`}
           >
             {day}
@@ -204,7 +219,7 @@ const CalendarView = ({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 md:gap-1.5">
+      <div className="grid grid-cols-7 gap-1 md:gap-2">
         {calendarDays}
       </div>
     </div>
